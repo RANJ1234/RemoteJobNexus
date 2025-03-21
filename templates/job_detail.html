@@ -175,6 +175,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Create a small background animation specifically for the job detail page
         createBackgroundAnimation();
+        // Auto-redirect to application URL
+        window.location.href = "{{ job.application_url }}";
     });
 </script>
 {% endblock %}
