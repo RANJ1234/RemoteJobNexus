@@ -47,6 +47,7 @@ def post_job():
             'application_url': request.form.get('application_url', ''),
             'contact_email': request.form.get('contact_email', ''),
             'job_type': request.form.get('job_type', 'Full-time'),
+            'job_category': request.form.get('job_category', 'White-collar'),
             'source_url': request.form.get('source_url', '')
         }
         

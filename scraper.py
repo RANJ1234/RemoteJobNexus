@@ -37,6 +37,7 @@ def extract_job_details(url):
         "salary_range": "",
         "application_url": "",
         "job_type": "Full-time",
+        "job_category": "White-collar",
         "source_url": url
     }
     
@@ -133,6 +134,32 @@ def extract_job_details(url):
             if match:
                 job_data["job_type"] = match.group(1).strip().title()
                 break
+                
+        # Try to determine job category (blue/white/grey-collar)
+        blue_collar_keywords = [
+            r"(?i)(manufacturing|factory|construction|maintenance|technician|mechanic|electrician|plumber|driver|operator|laborer|warehouse|assembly)",
+            r"(?i)(physical labor|trades|craft|repair|hands-on|mechanical|technical|installation|field service)"
+        ]
+        
+        grey_collar_keywords = [
+            r"(?i)(healthcare|nurse|medical|teacher|education|culinary|chef|hospitality|retail|service industry)",
+            r"(?i)(firefighter|police|security|childcare|elder care|salon|cosmetology|customer service)"
+        ]
+        
+        # First check for blue-collar
+        for pattern in blue_collar_keywords:
+            if re.search(pattern, text_content):
+                job_data["job_category"] = "Blue-collar"
+                break
+                
+        # Then check for grey-collar if not already categorized as blue-collar
+        if job_data["job_category"] == "White-collar":  # default value
+            for pattern in grey_collar_keywords:
+                if re.search(pattern, text_content):
+                    job_data["job_category"] = "Grey-collar"
+                    break
+        
+        # If neither blue nor grey collar patterns are found, stick with the default white-collar
         
         # For description, extract a relevant portion of text
         # Look for sections that might contain job descriptions
@@ -195,6 +222,7 @@ def fallback_extraction(url):
             "salary_range": "",
             "application_url": url,
             "job_type": "Full-time",
+            "job_category": "White-collar",
             "source_url": url
         }
     except Exception as e:
@@ -208,5 +236,6 @@ def fallback_extraction(url):
             "salary_range": "",
             "application_url": url,
             "job_type": "Full-time",
+            "job_category": "White-collar",
             "source_url": url
         }
