@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Browse Remote Jobs - AnimeRemote Jobs{% endblock %}
+{% block title %}Browse Remote Jobs - Remote Work{% endblock %}
 
 {% block content %}
 <section class="page-header">
@@ -29,14 +29,34 @@
                     
                     <hr>
                     
-                    <h4>Quick Links</h4>
+                    <h4>Job Categories</h4>
                     <div class="quick-links">
                         <a href="{{ url_for('jobs') }}" class="badge bg-primary-light">All Jobs</a>
+                        <a href="{{ url_for('jobs', q='White-collar') }}" class="badge bg-primary-light">White-collar</a>
+                        <a href="{{ url_for('jobs', q='Blue-collar') }}" class="badge bg-primary-light">Blue-collar</a>
+                        <a href="{{ url_for('jobs', q='Grey-collar') }}" class="badge bg-primary-light">Grey-collar</a>
+                    </div>
+
+                    <hr>
+                    
+                    <h4>Quick Links</h4>
+                    <div class="quick-links">
                         <a href="{{ url_for('jobs', q='developer') }}" class="badge bg-primary-light">Developer</a>
                         <a href="{{ url_for('jobs', q='designer') }}" class="badge bg-primary-light">Designer</a>
                         <a href="{{ url_for('jobs', q='marketing') }}" class="badge bg-primary-light">Marketing</a>
+                        <a href="{{ url_for('jobs', q='customer service') }}" class="badge bg-primary-light">Customer Service</a>
+                        <a href="{{ url_for('jobs', q='healthcare') }}" class="badge bg-primary-light">Healthcare</a>
+                        <a href="{{ url_for('jobs', q='maintenance') }}" class="badge bg-primary-light">Maintenance</a>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4>Job Type</h4>
+                    <div class="quick-links">
                         <a href="{{ url_for('jobs', q='full-time') }}" class="badge bg-primary-light">Full-time</a>
+                        <a href="{{ url_for('jobs', q='part-time') }}" class="badge bg-primary-light">Part-time</a>
                         <a href="{{ url_for('jobs', q='contract') }}" class="badge bg-primary-light">Contract</a>
+                        <a href="{{ url_for('jobs', q='freelance') }}" class="badge bg-primary-light">Freelance</a>
                     </div>
                     
                     <hr>
@@ -69,6 +89,9 @@
                                     <div class="job-meta">
                                         <span class="badge bg-primary-light"><i class="fas fa-map-marker-alt"></i> {{ job.location }}</span>
                                         <span class="badge bg-secondary-light"><i class="fas fa-briefcase"></i> {{ job.job_type }}</span>
+                                        {% if job.job_category %}
+                                            <span class="badge bg-info-light"><i class="fas fa-tag"></i> {{ job.job_category }}</span>
+                                        {% endif %}
                                         {% if job.salary_range %}
                                             <span class="badge bg-success-light"><i class="fas fa-dollar-sign"></i> {{ job.salary_range }}</span>
                                         {% endif %}

@@ -88,6 +88,19 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Job Category -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="job_category" name="job_category">
+                                            <option value="White-collar" {% if job_data.job_category|default('White-collar') == 'White-collar' %}selected{% endif %}>White-collar</option>
+                                            <option value="Blue-collar" {% if job_data.job_category|default('') == 'Blue-collar' %}selected{% endif %}>Blue-collar</option>
+                                            <option value="Grey-collar" {% if job_data.job_category|default('') == 'Grey-collar' %}selected{% endif %}>Grey-collar</option>
+                                        </select>
+                                        <label for="job_category">Job Category</label>
+                                    </div>
+                                    <div class="form-text">Select the job category that best fits this position</div>
+                                </div>
+                                
                                 <!-- Salary Range -->
                                 <div class="col-md-6">
                                     <div class="form-floating">
@@ -170,7 +183,8 @@
                     <div class="card-body">
                         <ul class="posting-tips">
                             <li>Use specific job titles that candidates search for</li>
-                            <li>Include key skills and technologies in your description</li>
+                            <li>Select the appropriate job category (blue/white/grey-collar)</li>
+                            <li>Include relevant skills and qualifications</li>
                             <li>Clearly describe the role and responsibilities</li>
                             <li>Mention your company culture and benefits</li>
                             <li>Provide salary information when possible</li>

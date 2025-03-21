@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ job.title }} at {{ job.company }} - AnimeRemote Jobs{% endblock %}
+{% block title %}{{ job.title }} at {{ job.company }} - Remote Work{% endblock %}
 
 {% block content %}
 <section class="page-header">
@@ -24,6 +24,9 @@
                         <div class="job-meta">
                             <span class="badge bg-primary-light"><i class="fas fa-map-marker-alt"></i> {{ job.location }}</span>
                             <span class="badge bg-secondary-light"><i class="fas fa-briefcase"></i> {{ job.job_type }}</span>
+                            {% if job.job_category %}
+                                <span class="badge bg-info-light"><i class="fas fa-tag"></i> {{ job.job_category }}</span>
+                            {% endif %}
                             {% if job.salary_range %}
                                 <span class="badge bg-success-light"><i class="fas fa-dollar-sign"></i> {{ job.salary_range }}</span>
                             {% endif %}
@@ -120,6 +123,12 @@
                                 <span class="property">Job Type:</span>
                                 <span class="value">{{ job.job_type }}</span>
                             </li>
+                            {% if job.job_category %}
+                            <li>
+                                <span class="property">Category:</span>
+                                <span class="value">{{ job.job_category }}</span>
+                            </li>
+                            {% endif %}
                             {% if job.salary_range %}
                             <li>
                                 <span class="property">Salary Range:</span>
