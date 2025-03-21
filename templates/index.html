@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}AnimeRemote Jobs - Find Remote Work in Tech{% endblock %}
+{% block title %}Remote Work - Find Remote Jobs Across the Globe{% endblock %}
 
 {% block content %}
 <section class="hero">
@@ -8,7 +8,7 @@
         <div class="row align-items-center">
             <div class="col-lg-6 hero-text">
                 <h1 class="display-4">Find Your Dream <span class="accent-text">Remote Job</span></h1>
-                <p class="lead">Discover remote opportunities in a vibrant anime-inspired community of tech professionals.</p>
+                <p class="lead">Discover remote opportunities across all industries including blue-collar, white-collar, and grey-collar jobs worldwide.</p>
                 
                 <form action="{{ url_for('jobs') }}" method="get" class="search-form">
                     <div class="input-group">
@@ -95,7 +95,7 @@
                         <i class="fas fa-search"></i>
                     </div>
                     <h3>Browse Jobs</h3>
-                    <p>Explore our curated list of remote opportunities from anime-inspired tech companies worldwide.</p>
+                    <p>Explore our curated list of remote opportunities from companies across all industries worldwide.</p>
                 </div>
             </div>
             
@@ -126,7 +126,7 @@
     <div class="container">
         <div class="cta-content">
             <h2>Ready to find your next remote opportunity?</h2>
-            <p>Join our community of remote workers and anime enthusiasts in tech.</p>
+            <p>Join our global community of remote workers across all job types and industries.</p>
             <a href="{{ url_for('jobs') }}" class="btn btn-light-outline">Explore Jobs</a>
         </div>
     </div>
