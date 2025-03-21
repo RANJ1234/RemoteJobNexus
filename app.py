@@ -180,9 +180,9 @@ class ContentStore:
 # Initialize the content store
 content_store = ContentStore()
 
-# Admin credentials (in a production environment, use a database with proper password hashing)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "remotework_admin2025"  # This would be properly secured in production
+# Initialize user store
+from models import User
+user_store = User()
 
 # Import routes after app initialization to avoid circular imports
 from routes import *

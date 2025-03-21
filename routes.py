@@ -5,7 +5,8 @@ import csv
 import io
 import json
 from functools import wraps
-from app import app, job_store, content_store, ADMIN_USERNAME, ADMIN_PASSWORD
+from app import app, job_store, content_store, user_store
+from functools import wraps
 from scraper import extract_job_details, is_valid_url, fallback_extraction
 
 @app.route('/')
@@ -16,6 +17,86 @@ def index():
     return render_template('index.html', featured_jobs=featured_jobs)
 
 @app.route('/jobs')
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session or 'admin' not in user_store.get_user_roles(session['username']):
+            flash('Admin access required', 'error')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/admin/users', methods=['GET'])
+@admin_required
+def admin_users():
+    return render_template('admin/users.html', users=user_store.users)
+
+@app.route('/admin/users/add', methods=['POST'])
+@admin_required
+def admin_add_user():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    roles = request.form.getlist('roles')
+    
+    if user_store.add_user(username, password, roles):
+        flash('User added successfully', 'success')
+    else:
+        flash('Username already exists', 'error')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/users/delete/<username>')
+@admin_required
+def admin_delete_user(username):
+    if user_store.delete_user(username):
+        flash('User deleted successfully', 'success')
+    else:
+        flash('Cannot delete user', 'error')
+    return redirect(url_for('admin_users'))
+
+@app.route('/admin/change-password', methods=['POST'])
+def admin_change_password():
+    if 'username' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('admin_login'))
+        
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    
+    if user_store.verify_password(session['username'], current_password):
+        if user_store.change_password(session['username'], new_password):
+            flash('Password changed successfully', 'success')
+        else:
+            flash('Failed to change password', 'error')
+    else:
+        flash('Current password is incorrect', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/forgot-password', methods=['GET', 'POST'])
+def admin_forgot_password():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        token = user_store.generate_reset_token(username)
+        if token:
+            # In production, send this via email
+            flash(f'Reset token: {token}', 'success')
+        else:
+            flash('User not found', 'error')
+        return redirect(url_for('admin_login'))
+    return render_template('admin/forgot_password.html')
+
+@app.route('/admin/reset-password', methods=['GET', 'POST'])
+def admin_reset_password():
+    if request.method == 'POST':
+        token = request.form.get('token')
+        new_password = request.form.get('new_password')
+        if user_store.reset_password_with_token(token, new_password):
+            flash('Password reset successfully', 'success')
+            return redirect(url_for('admin_login'))
+        flash('Invalid or expired token', 'error')
+    return render_template('admin/reset_password.html')
+
 def jobs():
     """Job listings page with all available jobs."""
     search_query = request.args.get('q', '')
