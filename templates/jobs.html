@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Remote Jobs - AnimeRemote Jobs{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Browse <span class="accent-text">Remote Jobs</span></h1>
+        <p>Discover remote opportunities tailored for you</p>
+    </div>
+</section>
+
+<section class="jobs-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 mb-4">
+                <div class="filter-sidebar">
+                    <h4>Search</h4>
+                    <form action="{{ url_for('jobs') }}" method="get">
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="Keywords..." value="{{ search_query }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <h4>Quick Links</h4>
+                    <div class="quick-links">
+                        <a href="{{ url_for('jobs') }}" class="badge bg-primary-light">All Jobs</a>
+                        <a href="{{ url_for('jobs', q='developer') }}" class="badge bg-primary-light">Developer</a>
+                        <a href="{{ url_for('jobs', q='designer') }}" class="badge bg-primary-light">Designer</a>
+                        <a href="{{ url_for('jobs', q='marketing') }}" class="badge bg-primary-light">Marketing</a>
+                        <a href="{{ url_for('jobs', q='full-time') }}" class="badge bg-primary-light">Full-time</a>
+                        <a href="{{ url_for('jobs', q='contract') }}" class="badge bg-primary-light">Contract</a>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="post-job-promo">
+                        <h5>Hiring remotely?</h5>
+                        <p>Post your job opening and reach talented remote workers.</p>
+                        <a href="{{ url_for('post_job') }}" class="btn btn-primary btn-sm w-100">Post a Job</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-9">
+                {% if search_query %}
+                <div class="search-results-header">
+                    <h3>Search results for "{{ search_query }}"</h3>
+                    <p>{{ jobs|length }} jobs found</p>
+                </div>
+                {% endif %}
+                
+                {% if jobs %}
+                    <div class="job-list">
+                        {% for job in jobs %}
+                            <div class="job-list-item" data-aos="fade-up">
+                                <div class="job-list-content">
+                                    <h3 class="job-title">
+                                        <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                                    </h3>
+                                    <div class="company-name">{{ job.company }}</div>
+                                    <div class="job-meta">
+                                        <span class="badge bg-primary-light"><i class="fas fa-map-marker-alt"></i> {{ job.location }}</span>
+                                        <span class="badge bg-secondary-light"><i class="fas fa-briefcase"></i> {{ job.job_type }}</span>
+                                        {% if job.salary_range %}
+                                            <span class="badge bg-success-light"><i class="fas fa-dollar-sign"></i> {{ job.salary_range }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="job-description">
+                                        {{ job.description|truncate(150) }}
+                                    </div>
+                                </div>
+                                <div class="job-list-footer">
+                                    <span class="job-date"><i class="far fa-calendar-alt"></i> Posted {{ format_date(job.date_posted) }}</span>
+                                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-search empty-icon"></i>
+                        <h3>No jobs found</h3>
+                        {% if search_query %}
+                            <p>We couldn't find any jobs matching "{{ search_query }}"</p>
+                            <a href="{{ url_for('jobs') }}" class="btn btn-outline-primary mt-3">View All Jobs</a>
+                        {% else %}
+                            <p>No job listings are available yet</p>
+                            <a href="{{ url_for('post_job') }}" class="btn btn-primary mt-3">Post a Job</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

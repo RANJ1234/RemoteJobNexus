@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Post a Remote Job - AnimeRemote Jobs{% endblock %}
+
+{% block head_extra %}
+<!-- Additional CSS for the job posting form -->
+<style>
+    .form-floating > .form-control {
+        height: calc(3.5rem + 2px);
+        line-height: 1.25;
+    }
+    
+    .form-floating > textarea.form-control {
+        height: auto;
+        min-height: 100px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Post a <span class="accent-text">Remote Job</span></h1>
+        <p>Share your remote opportunity with our community</p>
+    </div>
+</section>
+
+<section class="job-form-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="job-form-card">
+                    <div class="card-header">
+                        <h3>Job Details</h3>
+                        <p>Fill out the form below or paste a job URL to extract details automatically</p>
+                    </div>
+                    
+                    <div class="url-extraction-form mb-4">
+                        <div class="input-group">
+                            <input type="url" id="job-url" class="form-control" placeholder="Paste job URL here...">
+                            <button class="btn btn-primary" type="button" id="extract-btn">
+                                <i class="fas fa-magic"></i> Extract
+                            </button>
+                        </div>
+                        <div class="form-text">Paste a URL from job boards to automatically extract job details.</div>
+                        <div id="extraction-status" class="mt-2"></div>
+                    </div>
+                    
+                    <div class="job-submission-form">
+                        <form action="{{ url_for('post_job') }}" method="post" id="job-form">
+                            <div class="row g-3">
+                                <!-- Job Title -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="title" name="title" placeholder="Job Title" value="{{ job_data.title|default('') }}" required>
+                                        <label for="title">Job Title*</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Company Name -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="company" name="company" placeholder="Company Name" value="{{ job_data.company|default('') }}" required>
+                                        <label for="company">Company Name*</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Location -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="location" name="location" placeholder="Location" value="{{ job_data.location|default('Remote') }}">
+                                        <label for="location">Location</label>
+                                    </div>
+                                    <div class="form-text">Specify if there are location restrictions (e.g., "Remote - US Only")</div>
+                                </div>
+                                
+                                <!-- Job Type -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="job_type" name="job_type">
+                                            <option value="Full-time" {% if job_data.job_type|default('Full-time') == 'Full-time' %}selected{% endif %}>Full-time</option>
+                                            <option value="Part-time" {% if job_data.job_type|default('') == 'Part-time' %}selected{% endif %}>Part-time</option>
+                                            <option value="Contract" {% if job_data.job_type|default('') == 'Contract' %}selected{% endif %}>Contract</option>
+                                            <option value="Freelance" {% if job_data.job_type|default('') == 'Freelance' %}selected{% endif %}>Freelance</option>
+                                            <option value="Internship" {% if job_data.job_type|default('') == 'Internship' %}selected{% endif %}>Internship</option>
+                                        </select>
+                                        <label for="job_type">Job Type</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Salary Range -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="salary_range" name="salary_range" placeholder="Salary Range" value="{{ job_data.salary_range|default('') }}">
+                                        <label for="salary_range">Salary Range</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contact Email -->
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="email" class="form-control" id="contact_email" name="contact_email" placeholder="Contact Email" value="{{ job_data.contact_email|default('') }}">
+                                        <label for="contact_email">Contact Email</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Application URL -->
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="url" class="form-control" id="application_url" name="application_url" placeholder="Application URL" value="{{ job_data.application_url|default('') }}" required>
+                                        <label for="application_url">Application URL*</label>
+                                    </div>
+                                    <div class="form-text">Where candidates should apply for this position</div>
+                                </div>
+                                
+                                <!-- Job Description -->
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="description" name="description" placeholder="Job Description" style="height: 200px" required>{{ job_data.description|default('') }}</textarea>
+                                        <label for="description">Job Description*</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Job Requirements -->
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="requirements" name="requirements" placeholder="Job Requirements" style="height: 150px">{{ job_data.requirements|default('') }}</textarea>
+                                        <label for="requirements">Job Requirements</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Source URL (hidden) -->
+                                <input type="hidden" id="source_url" name="source_url" value="{{ job_data.source_url|default('') }}">
+                                
+                                <!-- Submit Button -->
+                                <div class="col-12">
+                                    <div class="form-submission">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-paper-plane"></i> Post Job
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h4>Posting Guidelines</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="posting-guidelines">
+                            <li>Only post genuine remote job opportunities</li>
+                            <li>Provide a clear job title and description</li>
+                            <li>Specify any location restrictions</li>
+                            <li>Include compensation information when possible</li>
+                            <li>Ensure the application link works correctly</li>
+                            <li>Do not include discriminatory requirements</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="sidebar-card mt-4">
+                    <div class="card-header">
+                        <h4>Tips for Better Visibility</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="posting-tips">
+                            <li>Use specific job titles that candidates search for</li>
+                            <li>Include key skills and technologies in your description</li>
+                            <li>Clearly describe the role and responsibilities</li>
+                            <li>Mention your company culture and benefits</li>
+                            <li>Provide salary information when possible</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/job-form.js') }}"></script>
+{% endblock %}
