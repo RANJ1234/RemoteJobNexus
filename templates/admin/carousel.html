@@ -1,0 +1,139 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Carousel Management - Remote Work Admin{% endblock %}
+
+{% block head %}
+<style>
+    .carousel-card {
+        position: relative;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .carousel-card .actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .carousel-preview {
+        width: 100%;
+        height: 150px;
+        background-size: cover;
+        background-position: center;
+        margin-bottom: 15px;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+    .no-image {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #6c757d;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Carousel Management</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Add New Carousel Item</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_add_carousel') }}">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="image_url" class="form-label">Image URL</label>
+                                    <input type="url" class="form-control" id="image_url" name="image_url" required>
+                                    <div class="form-text">Enter the full URL to the image</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <input type="text" class="form-control" id="description" name="description" required>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Carousel Item</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <h3 class="mb-3">Current Carousel Items</h3>
+    
+    <div class="row">
+        {% for item in carousel %}
+        <div class="col-md-4">
+            <div class="carousel-card">
+                <div class="actions">
+                    <button class="btn btn-sm btn-primary edit-item" data-index="{{ loop.index0 }}" data-bs-toggle="modal" data-bs-target="#editModal-{{ loop.index0 }}">
+                        Edit
+                    </button>
+                    <a href="{{ url_for('admin_delete_carousel', index=loop.index0) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this carousel item?')">
+                        Delete
+                    </a>
+                </div>
+                
+                <div class="carousel-preview {% if not item.image_url %}no-image{% endif %}" style="{% if item.image_url %}background-image: url('{{ item.image_url }}'){% endif %}">
+                    {% if not item.image_url %}No Image{% endif %}
+                </div>
+                
+                <h5>{{ item.title }}</h5>
+                <p>{{ item.description }}</p>
+                
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editModal-{{ loop.index0 }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Carousel Item</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form method="POST" action="{{ url_for('admin_update_carousel', index=loop.index0) }}">
+                                    <div class="mb-3">
+                                        <label for="edit_image_url_{{ loop.index0 }}" class="form-label">Image URL</label>
+                                        <input type="url" class="form-control" id="edit_image_url_{{ loop.index0 }}" name="image_url" value="{{ item.image_url }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit_title_{{ loop.index0 }}" class="form-label">Title</label>
+                                        <input type="text" class="form-control" id="edit_title_{{ loop.index0 }}" name="title" value="{{ item.title }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit_description_{{ loop.index0 }}" class="form-label">Description</label>
+                                        <input type="text" class="form-control" id="edit_description_{{ loop.index0 }}" name="description" value="{{ item.description }}" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No carousel items found. Add your first carousel item using the form above.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

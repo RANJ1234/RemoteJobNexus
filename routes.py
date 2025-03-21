@@ -168,7 +168,9 @@ def admin_logout():
 def admin_dashboard():
     """Admin dashboard page"""
     jobs_count = len(job_store.get_all_jobs())
-    return render_template('admin/dashboard.html', jobs_count=jobs_count)
+    # Record last login time
+    session['admin_last_login'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return render_template('admin/dashboard.html', jobs_count=jobs_count, now=datetime.datetime.now())
 
 @app.route('/admin/content')
 @admin_required
@@ -257,6 +259,20 @@ def admin_jobs():
     """Job management page"""
     jobs_list = job_store.get_all_jobs()
     return render_template('admin/jobs.html', jobs=jobs_list)
+    
+@app.route('/admin/jobs/delete/<int:job_id>')
+@admin_required
+def admin_delete_job(job_id):
+    """Delete a job"""
+    job = job_store.get_job(job_id)
+    if job:
+        # Remove the job from the job store
+        job_store.jobs = [j for j in job_store.jobs if j['id'] != job_id]
+        flash(f'Job "{job["title"]}" deleted successfully', 'success')
+    else:
+        flash('Job not found', 'error')
+    
+    return redirect(url_for('admin_jobs'))
 
 @app.route('/admin/jobs/export', methods=['POST'])
 @admin_required

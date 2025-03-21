@@ -1,0 +1,105 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard - Remote Work{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Admin Dashboard</h2>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Job Listings</h5>
+                    <p class="card-text display-4">{{ jobs_count }}</p>
+                </div>
+                <div class="card-footer d-flex">
+                    <a href="{{ url_for('admin_jobs') }}" class="text-white text-decoration-none">View Details
+                        <span class="ms-2">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Content Management</h5>
+                    <p class="card-text">Manage website content</p>
+                </div>
+                <div class="card-footer d-flex">
+                    <a href="{{ url_for('admin_content') }}" class="text-white text-decoration-none">Update Content
+                        <span class="ms-2">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Carousel Items</h5>
+                    <p class="card-text">Manage carousel images and text</p>
+                </div>
+                <div class="card-footer d-flex">
+                    <a href="{{ url_for('admin_carousel') }}" class="text-white text-decoration-none">Manage Carousel
+                        <span class="ms-2">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('admin_scrape_job') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Scrape New Job Listing
+                            <span class="badge bg-primary rounded-pill">→</span>
+                        </a>
+                        <a href="{{ url_for('post_job') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Post New Job Manually
+                            <span class="badge bg-primary rounded-pill">→</span>
+                        </a>
+                        <a href="{{ url_for('admin_jobs') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            Export Job Listings
+                            <span class="badge bg-primary rounded-pill">→</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">System Info</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Admin Panel Version</th>
+                                <td>1.0.0</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Last Login</th>
+                                <td>{{ session.get('admin_last_login', 'First login') }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Server Date</th>
+                                <td>{{ format_date(now) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

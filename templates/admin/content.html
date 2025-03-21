@@ -1,0 +1,129 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Content Management - Remote Work Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Content Management</h2>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" id="contentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="homepage-tab" data-bs-toggle="tab" data-bs-target="#homepage" type="button" role="tab">Homepage</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="footer-tab" data-bs-toggle="tab" data-bs-target="#footer" type="button" role="tab">Footer</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content mt-3">
+                <!-- Homepage Content Tab -->
+                <div class="tab-pane fade show active" id="homepage" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Homepage Content</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_update_content') }}">
+                                <input type="hidden" name="section" value="homepage">
+                                
+                                <div class="mb-3">
+                                    <label for="homepage_hero_title" class="form-label">Hero Title</label>
+                                    <input type="text" class="form-control" id="homepage_hero_title" name="homepage_hero_title" value="{{ content.homepage.hero_title }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="homepage_hero_subtitle" class="form-label">Hero Subtitle</label>
+                                    <input type="text" class="form-control" id="homepage_hero_subtitle" name="homepage_hero_subtitle" value="{{ content.homepage.hero_subtitle }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="homepage_featured_section_title" class="form-label">Featured Section Title</label>
+                                    <input type="text" class="form-control" id="homepage_featured_section_title" name="homepage_featured_section_title" value="{{ content.homepage.featured_section_title }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="homepage_featured_section_description" class="form-label">Featured Section Description</label>
+                                    <textarea class="form-control" id="homepage_featured_section_description" name="homepage_featured_section_description" rows="2">{{ content.homepage.featured_section_description }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="homepage_about_section_title" class="form-label">About Section Title</label>
+                                    <input type="text" class="form-control" id="homepage_about_section_title" name="homepage_about_section_title" value="{{ content.homepage.about_section_title }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="homepage_about_section_content" class="form-label">About Section Content</label>
+                                    <textarea class="form-control" id="homepage_about_section_content" name="homepage_about_section_content" rows="4">{{ content.homepage.about_section_content }}</textarea>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Update Homepage Content</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer Content Tab -->
+                <div class="tab-pane fade" id="footer" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Footer Content</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('admin_update_content') }}">
+                                <input type="hidden" name="section" value="footer">
+                                
+                                <div class="mb-3">
+                                    <label for="footer_company_description" class="form-label">Company Description</label>
+                                    <textarea class="form-control" id="footer_company_description" name="footer_company_description" rows="3">{{ content.footer.company_description }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="footer_contact_email" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="footer_contact_email" name="footer_contact_email" value="{{ content.footer.contact_email }}">
+                                </div>
+                                
+                                <h5 class="mt-4 mb-3">Social Links</h5>
+                                
+                                <div class="mb-3">
+                                    <label for="footer_social_links_twitter" class="form-label">Twitter</label>
+                                    <input type="url" class="form-control" id="footer_social_links_twitter" name="footer_social_links.twitter" value="{{ content.footer.social_links.twitter }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="footer_social_links_linkedin" class="form-label">LinkedIn</label>
+                                    <input type="url" class="form-control" id="footer_social_links_linkedin" name="footer_social_links.linkedin" value="{{ content.footer.social_links.linkedin }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="footer_social_links_facebook" class="form-label">Facebook</label>
+                                    <input type="url" class="form-control" id="footer_social_links_facebook" name="footer_social_links.facebook" value="{{ content.footer.social_links.facebook }}">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Update Footer Content</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Activate Bootstrap tabs
+    document.addEventListener('DOMContentLoaded', function() {
+        const triggerTabList = Array.from(document.querySelectorAll('#contentTabs button'));
+        triggerTabList.forEach(triggerEl => {
+            const tabTrigger = new bootstrap.Tab(triggerEl);
+            triggerEl.addEventListener('click', event => {
+                event.preventDefault();
+                tabTrigger.show();
+            });
+        });
+    });
+</script>
+{% endblock %}

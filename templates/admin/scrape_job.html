@@ -1,0 +1,131 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Job Scraper - Remote Work Admin{% endblock %}
+
+{% block head %}
+<style>
+    .scraper-card {
+        border-radius: 0.5rem;
+    }
+    .scraper-info {
+        background-color: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .url-examples {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Job URL Scraper</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card scraper-card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Scrape Job from URL</h5>
+                </div>
+                <div class="card-body">
+                    <div class="scraper-info">
+                        <h5>How It Works</h5>
+                        <p>Enter the URL of a job posting, and our system will attempt to extract job details automatically. The scraped job will be added directly to your job listings.</p>
+                        <p class="mb-0"><strong>Tip:</strong> For best results, use URLs from major job boards and company career pages.</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('admin_scrape_job') }}">
+                        <div class="mb-3">
+                            <label for="url" class="form-label">Job Posting URL</label>
+                            <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com/jobs/remote-developer" required>
+                            <div class="url-examples mt-2">
+                                <strong>Example URLs:</strong>
+                                <ul>
+                                    <li>LinkedIn: https://www.linkedin.com/jobs/view/123456789</li>
+                                    <li>Indeed: https://www.indeed.com/viewjob?jk=abcdef123456</li>
+                                    <li>Remote OK: https://remoteok.com/remote-jobs/123456-remote-job</li>
+                                    <li>Company Sites: https://example.com/careers/job-posting</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Scrape Job Details</button>
+                        <a href="{{ url_for('admin_jobs') }}" class="btn btn-secondary ms-2">Back to Jobs</a>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card scraper-card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Bulk Job Scraping</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Need to scrape multiple job listings at once? Our system can scrape multiple job postings from a list of URLs.</p>
+                    
+                    <form method="POST" action="{{ url_for('admin_scrape_job') }}" id="bulkScrapeForm">
+                        <input type="hidden" name="bulk_mode" value="true">
+                        <div class="mb-3">
+                            <label for="bulk_urls" class="form-label">Job Posting URLs (one per line)</label>
+                            <textarea class="form-control" id="bulk_urls" name="bulk_urls" rows="5" placeholder="https://example.com/jobs/job1&#10;https://example.com/jobs/job2&#10;https://example.com/jobs/job3"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success" disabled>
+                            Bulk Scrape (Coming Soon)
+                        </button>
+                        <div class="text-muted mt-2">
+                            <small>Bulk scraping functionality will be available in the next update.</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card scraper-card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Data Extraction</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Information We Extract</h6>
+                    <ul>
+                        <li>Job Title</li>
+                        <li>Company Name</li>
+                        <li>Location (defaults to Remote)</li>
+                        <li>Job Description</li>
+                        <li>Requirements</li>
+                        <li>Salary Range (when available)</li>
+                        <li>Job Type</li>
+                        <li>Job Category (Blue/White/Grey-collar)</li>
+                        <li>Application URL</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6>Extraction Methods</h6>
+                    <ol>
+                        <li>Primary: Advanced content extraction with Trafilatura</li>
+                        <li>Fallback: HTML parsing with BeautifulSoup</li>
+                        <li>Heuristic analysis for field identification</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="card scraper-card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Important Notes</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Our scraper respects robots.txt directives and site Terms of Service</li>
+                        <li>Not all job sites allow scraping - results may vary</li>
+                        <li>You may need to manually edit scraped jobs to add missing details</li>
+                        <li>The scraper automatically detects job categories based on keywords</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
