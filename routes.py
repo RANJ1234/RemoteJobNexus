@@ -264,7 +264,7 @@ def admin_dashboard():
     jobs_count = len(job_store.get_all_jobs())
     # Record last login time
     session['admin_last_login'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return render_template('admin/dashboard.html', jobs_count=jobs_count, now=datetime.datetime.now())
+    return render_template('admin/dashboard.html', jobs_count=jobs_count, now=datetime.datetime.now(), user_store=user_store)
 
 @app.route('/admin/content')
 @admin_required
