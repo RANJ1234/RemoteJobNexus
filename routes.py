@@ -17,6 +17,15 @@ def index():
     return render_template('index.html', featured_jobs=featured_jobs)
 
 @app.route('/jobs')
+def jobs():
+    """Job listings page with all available jobs."""
+    search_query = request.args.get('q', '')
+    if search_query:
+        jobs_list = job_store.search_jobs(search_query)
+    else:
+        jobs_list = job_store.get_all_jobs()
+    
+    return render_template('jobs.html', jobs=jobs_list, search_query=search_query)
 
 def admin_required(f):
     @wraps(f)
