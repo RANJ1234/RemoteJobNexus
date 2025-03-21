@@ -31,7 +31,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    {% if session.get('admin_authenticated') %}
+                    {% if session.get('username') and 'admin' in user_store.get_user_roles(session.get('username')) %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('index') }}" target="_blank">View Site</a>
                     </li>
@@ -46,7 +46,7 @@
 
     <div class="container-fluid">
         <div class="row">
-            {% if session.get('admin_authenticated') %}
+            {% if session.get('username') and 'admin' in user_store.get_user_roles(session.get('username')) %}
             <div class="col-md-3 col-lg-2 admin-sidebar p-0">
                 <div class="list-group list-group-flush mt-3">
                     <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action {% if request.path == url_for('admin_dashboard') %}active{% endif %}">
@@ -80,7 +80,7 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
-                
+
                 {% block content %}{% endblock %}
             </div>
         </div>

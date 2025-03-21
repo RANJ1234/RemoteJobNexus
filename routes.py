@@ -223,7 +223,7 @@ def server_error(e):
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'admin_authenticated' not in session or not session['admin_authenticated']:
+        if 'username' not in session or 'admin' not in user_store.get_user_roles(session['username']):
             flash('Please log in to access the admin panel', 'error')
             return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
