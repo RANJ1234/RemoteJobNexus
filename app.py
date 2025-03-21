@@ -32,6 +32,7 @@ class JobStore:
             'application_url': job_data.get('application_url', ''),
             'contact_email': job_data.get('contact_email', ''),
             'job_type': job_data.get('job_type', 'Full-time'),
+            'job_category': job_data.get('job_category', 'White-collar'),
             'date_posted': datetime.now(),
             'source_url': job_data.get('source_url', '')
         }
@@ -102,6 +103,86 @@ job_store.add_job({
     'contact_email': 'hiring@neotokyographics.jp',
     'job_type': 'Contract'
 })
+
+# Content management for the admin panel
+class ContentStore:
+    def __init__(self):
+        # Dictionary to store all site content by section
+        self.content = {
+            'homepage': {
+                'hero_title': 'Find Your Remote Dream Job',
+                'hero_subtitle': 'Connect with global opportunities - blue, white, and grey-collar positions available worldwide.',
+                'featured_section_title': 'Featured Remote Positions',
+                'featured_section_description': 'Discover top remote opportunities from around the world',
+                'about_section_title': 'Why Remote Work?',
+                'about_section_content': 'Remote work offers flexibility, work-life balance, and access to global opportunities. Our platform connects talented individuals with employers worldwide, regardless of location.'
+            },
+            'carousel': [
+                {
+                    'image_url': '/static/images/carousel1.jpg',
+                    'title': 'Blue-Collar Remote Work',
+                    'description': 'Remote opportunities for skilled trades and technical professionals'
+                },
+                {
+                    'image_url': '/static/images/carousel2.jpg',
+                    'title': 'White-Collar Positions',
+                    'description': 'Professional roles from leading global companies'
+                },
+                {
+                    'image_url': '/static/images/carousel3.jpg',
+                    'title': 'Grey-Collar Careers',
+                    'description': 'Remote options in healthcare, education, and service industries'
+                }
+            ],
+            'footer': {
+                'company_description': 'Remote Work connects global talent with employers worldwide, offering opportunities across all sectors.',
+                'contact_email': 'contact@remotework.com',
+                'social_links': {
+                    'twitter': 'https://twitter.com/remotework',
+                    'linkedin': 'https://linkedin.com/company/remotework',
+                    'facebook': 'https://facebook.com/remotework'
+                }
+            }
+        }
+        
+    def get_section(self, section_name):
+        """Get content for a specific section"""
+        return self.content.get(section_name, {})
+    
+    def update_section(self, section_name, content_data):
+        """Update content for a specific section"""
+        if section_name in self.content:
+            self.content[section_name].update(content_data)
+            return True
+        return False
+    
+    def add_carousel_item(self, item_data):
+        """Add a new carousel item"""
+        if 'carousel' in self.content:
+            self.content['carousel'].append(item_data)
+            return True
+        return False
+    
+    def remove_carousel_item(self, index):
+        """Remove a carousel item by index"""
+        if 'carousel' in self.content and 0 <= index < len(self.content['carousel']):
+            self.content['carousel'].pop(index)
+            return True
+        return False
+    
+    def update_carousel_item(self, index, item_data):
+        """Update a carousel item by index"""
+        if 'carousel' in self.content and 0 <= index < len(self.content['carousel']):
+            self.content['carousel'][index].update(item_data)
+            return True
+        return False
+
+# Initialize the content store
+content_store = ContentStore()
+
+# Admin credentials (in a production environment, use a database with proper password hashing)
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "remotework_admin2025"  # This would be properly secured in production
 
 # Import routes after app initialization to avoid circular imports
 from routes import *

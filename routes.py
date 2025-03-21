@@ -1,7 +1,11 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, session, Response
 import datetime
 import logging
-from app import app, job_store
+import csv
+import io
+import json
+from functools import wraps
+from app import app, job_store, content_store, ADMIN_USERNAME, ADMIN_PASSWORD
 from scraper import extract_job_details, is_valid_url, fallback_extraction
 
 @app.route('/')
@@ -124,3 +128,204 @@ def page_not_found(e):
 def server_error(e):
     """Handle 500 errors."""
     return render_template('base.html', error_message="Internal server error"), 500
+
+# Admin authentication decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_authenticated' not in session or not session['admin_authenticated']:
+            flash('Please log in to access the admin panel', 'error')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Admin routes
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin_authenticated'] = True
+            flash('Successfully logged in to admin panel', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid credentials', 'error')
+    
+    return render_template('admin/login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Admin logout"""
+    session.pop('admin_authenticated', None)
+    flash('Successfully logged out', 'success')
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    """Admin dashboard page"""
+    jobs_count = len(job_store.get_all_jobs())
+    return render_template('admin/dashboard.html', jobs_count=jobs_count)
+
+@app.route('/admin/content')
+@admin_required
+def admin_content():
+    """Content management page"""
+    return render_template('admin/content.html', content=content_store.content)
+
+@app.route('/admin/content/update', methods=['POST'])
+@admin_required
+def admin_update_content():
+    """Update website content"""
+    section = request.form.get('section')
+    if not section:
+        flash('No section specified', 'error')
+        return redirect(url_for('admin_content'))
+    
+    # Process form data for this section
+    content_data = {}
+    for key, value in request.form.items():
+        if key.startswith(f"{section}_"):
+            field_name = key.replace(f"{section}_", "")
+            content_data[field_name] = value
+    
+    # Update content
+    if content_store.update_section(section, content_data):
+        flash(f'Content updated successfully for {section}', 'success')
+    else:
+        flash(f'Failed to update content for {section}', 'error')
+    
+    return redirect(url_for('admin_content'))
+
+@app.route('/admin/carousel')
+@admin_required
+def admin_carousel():
+    """Carousel management page"""
+    return render_template('admin/carousel.html', carousel=content_store.get_section('carousel'))
+
+@app.route('/admin/carousel/add', methods=['POST'])
+@admin_required
+def admin_add_carousel():
+    """Add a carousel item"""
+    item_data = {
+        'image_url': request.form.get('image_url', ''),
+        'title': request.form.get('title', ''),
+        'description': request.form.get('description', '')
+    }
+    
+    if content_store.add_carousel_item(item_data):
+        flash('Carousel item added successfully', 'success')
+    else:
+        flash('Failed to add carousel item', 'error')
+    
+    return redirect(url_for('admin_carousel'))
+
+@app.route('/admin/carousel/update/<int:index>', methods=['POST'])
+@admin_required
+def admin_update_carousel(index):
+    """Update a carousel item"""
+    item_data = {
+        'image_url': request.form.get('image_url', ''),
+        'title': request.form.get('title', ''),
+        'description': request.form.get('description', '')
+    }
+    
+    if content_store.update_carousel_item(index, item_data):
+        flash('Carousel item updated successfully', 'success')
+    else:
+        flash('Failed to update carousel item', 'error')
+    
+    return redirect(url_for('admin_carousel'))
+
+@app.route('/admin/carousel/delete/<int:index>')
+@admin_required
+def admin_delete_carousel(index):
+    """Delete a carousel item"""
+    if content_store.remove_carousel_item(index):
+        flash('Carousel item deleted successfully', 'success')
+    else:
+        flash('Failed to delete carousel item', 'error')
+    
+    return redirect(url_for('admin_carousel'))
+
+@app.route('/admin/jobs')
+@admin_required
+def admin_jobs():
+    """Job management page"""
+    jobs_list = job_store.get_all_jobs()
+    return render_template('admin/jobs.html', jobs=jobs_list)
+
+@app.route('/admin/jobs/export', methods=['POST'])
+@admin_required
+def admin_export_jobs():
+    """Export jobs to CSV or JSON"""
+    export_format = request.form.get('format', 'csv')
+    jobs_list = job_store.get_all_jobs()
+    
+    if export_format == 'csv':
+        output = io.StringIO()
+        fieldnames = ['id', 'title', 'company', 'location', 'description', 'requirements',
+                    'salary_range', 'job_type', 'job_category', 'date_posted', 'application_url']
+        
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        for job in jobs_list:
+            # Convert datetime to string
+            job_copy = job.copy()
+            if isinstance(job_copy.get('date_posted'), datetime.datetime):
+                job_copy['date_posted'] = job_copy['date_posted'].strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Write only the fields we care about
+            writer.writerow({field: job_copy.get(field, '') for field in fieldnames})
+        
+        response = Response(output.getvalue(), mimetype='text/csv')
+        response.headers['Content-Disposition'] = 'attachment; filename=jobs_export.csv'
+        return response
+    
+    elif export_format == 'json':
+        # Convert datetime objects to strings for JSON serialization
+        jobs_json = []
+        for job in jobs_list:
+            job_copy = job.copy()
+            if isinstance(job_copy.get('date_posted'), datetime.datetime):
+                job_copy['date_posted'] = job_copy['date_posted'].strftime('%Y-%m-%d %H:%M:%S')
+            jobs_json.append(job_copy)
+        
+        response = Response(json.dumps(jobs_json, indent=2), mimetype='application/json')
+        response.headers['Content-Disposition'] = 'attachment; filename=jobs_export.json'
+        return response
+    
+    else:
+        flash('Unsupported export format', 'error')
+        return redirect(url_for('admin_jobs'))
+
+@app.route('/admin/scrape-job', methods=['GET', 'POST'])
+@admin_required
+def admin_scrape_job():
+    """Admin page for scraping jobs from URLs"""
+    if request.method == 'POST':
+        url = request.form.get('url', '')
+        if not url or not is_valid_url(url):
+            flash('Please enter a valid URL', 'error')
+            return render_template('admin/scrape_job.html')
+            
+        try:
+            job_data = extract_job_details(url)
+            if "error" in job_data:
+                # Try fallback extraction method
+                job_data = fallback_extraction(url)
+                
+            # Add the job directly
+            job_id = job_store.add_job(job_data)
+            flash(f'Job successfully scraped and added (ID: {job_id})', 'success')
+            return redirect(url_for('admin_jobs'))
+            
+        except Exception as e:
+            logging.error(f"Error during job scraping: {str(e)}")
+            flash(f"Could not scrape job details: {str(e)}", "error")
+            
+    return render_template('admin/scrape_job.html')
