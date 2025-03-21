@@ -232,15 +232,19 @@ def admin_required(f):
 # Admin routes
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    """Admin login page"""
+    """Login page for both admin and employees"""
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            session['admin_authenticated'] = True
-            flash('Successfully logged in to admin panel', 'success')
-            return redirect(url_for('admin_dashboard'))
+        if user_store.verify_password(username, password):
+            session['username'] = username
+            if 'admin' in user_store.get_user_roles(username):
+                flash('Successfully logged in to admin panel', 'success')
+                return redirect(url_for('admin_dashboard'))
+            else:
+                flash('Successfully logged in', 'success')
+                return redirect(url_for('index'))
         else:
             flash('Invalid credentials', 'error')
     
@@ -248,10 +252,10 @@ def admin_login():
 
 @app.route('/admin/logout')
 def admin_logout():
-    """Admin logout"""
-    session.pop('admin_authenticated', None)
+    """Logout route"""
+    session.clear()
     flash('Successfully logged out', 'success')
-    return redirect(url_for('admin_login'))
+    return redirect(url_for('index'))
 
 @app.route('/admin')
 @admin_required

@@ -1,13 +1,14 @@
+
 {% extends "admin/base.html" %}
 
-{% block title %}Admin Login - Remote Work{% endblock %}
+{% block title %}Login - Remote Work{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center mt-5">
     <div class="col-md-6 col-lg-4">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Admin Login</h4>
+                <h4 class="mb-0">Login</h4>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('admin_login') }}">
@@ -19,8 +20,9 @@
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
-                    <div class="d-grid">
+                    <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">Login</button>
+                        <a href="{{ url_for('admin_forgot_password') }}" class="btn btn-link">Forgot Password?</a>
                     </div>
                 </form>
             </div>
