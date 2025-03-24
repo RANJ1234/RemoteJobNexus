@@ -122,32 +122,6 @@ class ContentStore:
             'carousel': [
                 {
                     'image_url': '/static/images/carousel1.jpg',
-
-    def add_post(self, title, content, author, tags=None):
-        """Add a new blog post"""
-        post = {
-            'id': self.post_id_counter,
-            'title': title,
-            'content': content,
-            'author': author,
-            'tags': tags or [],
-            'date': datetime.now()
-        }
-        self.post_id_counter += 1
-        self.posts.append(post)
-        return post['id']
-    
-    def get_post(self, post_id):
-        """Get a specific post"""
-        for post in self.posts:
-            if post['id'] == post_id:
-                return post
-        return None
-    
-    def get_all_posts(self):
-        """Get all posts sorted by date"""
-        return sorted(self.posts, key=lambda x: x['date'], reverse=True)
-
                     'title': 'Blue-Collar Remote Work',
                     'description': 'Remote opportunities for skilled trades and technical professionals'
                 },
