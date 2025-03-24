@@ -439,3 +439,32 @@ def admin_scrape_job():
             flash(f"Could not scrape job details: {str(e)}", "error")
             
     return render_template('admin/scrape_job.html')
+
+
+@app.route('/blog')
+def blog():
+    """Blog listing page"""
+    posts = content_store.get_all_posts()
+    return render_template('blog.html', posts=posts)
+
+@app.route('/blog/<int:post_id>')
+def blog_post(post_id):
+    """Single blog post page"""
+    post = content_store.get_post(post_id)
+    if not post:
+        flash("Post not found", "error")
+        return redirect(url_for('blog'))
+    return render_template('blog_post.html', post=post)
+
+@app.route('/admin/blog', methods=['GET', 'POST'])
+@admin_required
+def admin_blog():
+    """Blog management page"""
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        tags = request.form.get('tags', '').split(',')
+        post_id = content_store.add_post(title, content, session['username'], tags)
+        flash('Post added successfully', 'success')
+        return redirect(url_for('blog_post', post_id=post_id))
+    return render_template('admin/blog.html', posts=content_store.get_all_posts())
