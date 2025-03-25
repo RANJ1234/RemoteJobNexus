@@ -7,12 +7,12 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6 hero-text">
-                <h1 class="display-4">Find Your Dream <span class="accent-text">Remote Job</span></h1>
-                <p class="lead">Discover remote opportunities across all industries including blue-collar, white-collar, and grey-collar jobs worldwide.</p>
+                <h1 class="display-4">{{ content.title|default('Find Your Dream <span class="accent-text">Remote Job</span>') }}</h1>
+                <p class="lead">{{ content.subtitle|default('Discover remote opportunities across all industries including blue-collar, white-collar, and grey-collar jobs worldwide.') }}</p>
                 
                 <form action="{{ url_for('jobs') }}" method="get" class="search-form">
                     <div class="input-group">
-                        <input type="text" name="q" class="form-control" placeholder="Search for jobs, skills, or companies...">
+                        <input type="text" name="q" class="form-control" placeholder="{{ content.search_placeholder|default('Search for jobs, skills, or companies...') }}">
                         <button class="btn btn-primary" type="submit">
                             <i class="fas fa-search"></i> Search
                         </button>
@@ -21,10 +21,10 @@
                 
                 <div class="mt-4 hero-cta">
                     <a href="{{ url_for('jobs') }}" class="btn btn-outline-primary me-3">
-                        <i class="fas fa-list"></i> Browse All Jobs
+                        <i class="fas fa-list"></i> {{ content.browse_button_text|default('Browse All Jobs') }}
                     </a>
                     <a href="{{ url_for('post_job') }}" class="btn btn-primary">
-                        <i class="fas fa-plus-circle"></i> Post a Job
+                        <i class="fas fa-plus-circle"></i> {{ content.post_button_text|default('Post a Job') }}
                     </a>
                 </div>
             </div>
@@ -34,6 +34,42 @@
         </div>
     </div>
 </section>
+
+<!-- Carousel Section - Only shown if carousel items exist -->
+{% if carousel and carousel|length > 0 %}
+<section class="carousel-section">
+    <div class="container">
+        <div id="jobCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                {% for item in carousel %}
+                <button type="button" data-bs-target="#jobCarousel" data-bs-slide-to="{{ loop.index0 }}" 
+                        {% if loop.first %}class="active"{% endif %} aria-current="true" 
+                        aria-label="Slide {{ loop.index }}"></button>
+                {% endfor %}
+            </div>
+            <div class="carousel-inner">
+                {% for item in carousel %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <img src="{{ item.image_url }}" class="d-block w-100" alt="{{ item.title }}">
+                    <div class="carousel-caption d-none d-md-block">
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#jobCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#jobCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <section class="featured-jobs">
     <div class="container">

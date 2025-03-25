@@ -4,6 +4,7 @@ import logging
 import re
 import trafilatura
 from urllib.parse import urlparse
+from web_scraper import get_website_text_content, summarize_webpage
 
 
 def is_valid_url(url):
@@ -42,15 +43,28 @@ def extract_job_details(url):
     }
     
     try:
-        # First try using trafilatura for general content extraction
-        downloaded = trafilatura.fetch_url(url)
-        if not downloaded:
-            raise Exception("Failed to download page content")
-        
-        # Extract the main text content
-        text_content = trafilatura.extract(downloaded)
-        if not text_content:
-            raise Exception("Failed to extract text content")
+        # First try using our enhanced web scraper
+        text_content = get_website_text_content(url)
+        if "Failed to download content" in text_content or "Error extracting content" in text_content:
+            # Try using the original method as fallback
+            downloaded = trafilatura.fetch_url(url)
+            if not downloaded:
+                raise Exception("Failed to download page content")
+            
+            text_content = trafilatura.extract(downloaded)
+            if not text_content:
+                raise Exception("Failed to extract text content")
+                
+        # Try to get additional metadata using the summarize function
+        summary = summarize_webpage(url)
+        if not isinstance(summary, dict) or "error" in summary:
+            logging.warning(f"Could not extract metadata: {summary.get('error', 'Unknown error')}")
+        else:
+            # Use metadata from summary if available
+            if summary.get("title") and not job_data["title"]:
+                job_data["title"] = summary.get("title")
+            if summary.get("author") and not job_data["company"]:
+                job_data["company"] = summary.get("author")
         
         # Extract specific job details using heuristics
         # Parse the content and try to identify job details
@@ -194,9 +208,30 @@ def extract_job_details(url):
 def fallback_extraction(url):
     """
     Fallback method to extract basic information when the main method fails.
-    Uses BeautifulSoup for direct HTML parsing.
+    Uses a combination of techniques for more reliable extraction.
     """
     try:
+        # First try with our web_scraper utilities
+        summary = summarize_webpage(url)
+        
+        if isinstance(summary, dict) and "error" not in summary:
+            # If successful, build job data from the summary
+            content = summary.get("text", "")
+            
+            return {
+                "title": summary.get("title", "Job Position")[:100],
+                "company": summary.get("author", ""),
+                "location": "Remote",
+                "description": content[:1000] if content else "",
+                "requirements": "",
+                "salary_range": "",
+                "application_url": url,
+                "job_type": "Full-time",
+                "job_category": "White-collar",
+                "source_url": url
+            }
+        
+        # If that fails, try direct HTML parsing with BeautifulSoup
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -209,16 +244,39 @@ def fallback_extraction(url):
             h1_tag = soup.find('h1')
             title = h1_tag.text.strip() if h1_tag else "Job Position"
         
-        # Extract text content
+        # Look for company name in meta tags or structured data
+        company = ""
+        meta_org = soup.find('meta', property='og:site_name')
+        if meta_org:
+            company = meta_org.get('content', '')
+        
+        # Extract text content from paragraphs
         paragraphs = soup.find_all('p')
-        content = " ".join([p.text for p in paragraphs[:5]])
+        content = " ".join([p.text.strip() for p in paragraphs[:10]])
+        
+        # Look for potential job description and requirements sections
+        description = ""
+        requirements = ""
+        
+        # Check for common section identifiers
+        for section in soup.find_all(['div', 'section'], class_=lambda c: c and any(x in c.lower() for x in ['job-description', 'description', 'about-role'])):
+            description = section.get_text().strip()
+            break
+            
+        for section in soup.find_all(['div', 'section'], class_=lambda c: c and any(x in c.lower() for x in ['requirements', 'qualifications'])):
+            requirements = section.get_text().strip()
+            break
+        
+        # If no structured sections found, use the general content
+        if not description:
+            description = content[:1000]
         
         return {
             "title": title[:100],
-            "company": "",
+            "company": company,
             "location": "Remote",
-            "description": content[:500],
-            "requirements": "",
+            "description": description[:1000],
+            "requirements": requirements[:500],
             "salary_range": "",
             "application_url": url,
             "job_type": "Full-time",

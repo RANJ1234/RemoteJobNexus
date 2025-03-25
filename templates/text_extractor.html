@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Website Text Extractor | Remote Work{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="text-center mb-5">
+                <h1 class="display-4">Website Text Extractor</h1>
+                <p class="lead">Extract clean, readable text content from any website</p>
+            </div>
+
+            <div class="card mb-5">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="form-group mb-3">
+                            <label for="url" class="form-label">Enter a website URL</label>
+                            <div class="input-group">
+                                <input type="url" class="form-control" id="url" name="url" 
+                                       placeholder="https://example.com" value="{{ url }}" required>
+                                <button type="submit" class="btn btn-primary">Extract Text</button>
+                            </div>
+                            <small class="form-text text-muted">We'll extract the main content from this URL, removing ads, navigation, and other clutter.</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if metadata %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h4>Page Metadata</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Title:</strong> {{ metadata.title }}</p>
+                            <p><strong>Author:</strong> {{ metadata.author if metadata.author != "Unknown" else "Not specified" }}</p>
+                            <p><strong>Date:</strong> {{ metadata.date if metadata.date != "Unknown" else "Not specified" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Source:</strong> {{ metadata.hostname }}</p>
+                            {% if metadata.categories %}
+                            <p><strong>Categories:</strong> {{ metadata.categories|join(', ') }}</p>
+                            {% endif %}
+                            {% if metadata.tags %}
+                            <p><strong>Tags:</strong> {{ metadata.tags|join(', ') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if extracted_text %}
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Extracted Content</h4>
+                    <button class="btn btn-sm btn-outline-secondary" id="copy-btn" 
+                            onclick="copyToClipboard()">Copy Text</button>
+                </div>
+                <div class="card-body">
+                    <div class="extracted-content" id="extracted-content" style="white-space: pre-line;">
+                        {{ extracted_text }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-5">
+                <h3>How it works</h3>
+                <p>Our text extractor uses advanced algorithms to:</p>
+                <ul>
+                    <li>Identify and extract the main content from web pages</li>
+                    <li>Remove ads, navigation menus, footers, and other non-content elements</li>
+                    <li>Preserve the essential text in a clean, readable format</li>
+                    <li>Extract metadata when available (title, author, date, etc.)</li>
+                </ul>
+                <p>This tool is particularly useful for:</p>
+                <ul>
+                    <li>Reading articles without distractions</li>
+                    <li>Extracting job descriptions from various sources</li>
+                    <li>Saving content for offline reading</li>
+                    <li>Analyzing text content from websites</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const content = document.getElementById('extracted-content').innerText;
+    navigator.clipboard.writeText(content).then(() => {
+        // Change button text temporarily
+        const copyBtn = document.getElementById('copy-btn');
+        const originalText = copyBtn.innerText;
+        copyBtn.innerText = 'Copied!';
+        setTimeout(() => {
+            copyBtn.innerText = originalText;
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

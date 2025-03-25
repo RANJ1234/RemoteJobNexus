@@ -47,6 +47,11 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == url_for('post_job') %}active{% endif %}" href="{{ url_for('post_job') }}">Post a Job</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('text_extractor') %}active{% endif %}" href="{{ url_for('text_extractor') }}">
+                            <i class="fas fa-file-alt me-1"></i> Text Extractor
+                        </a>
+                    </li>
                 </ul>
                 <div class="ms-2">
                     {% if session.get('username') %}
@@ -104,6 +109,7 @@
                         <li><a href="{{ url_for('index') }}">Home</a></li>
                         <li><a href="{{ url_for('jobs') }}">Browse Jobs</a></li>
                         <li><a href="{{ url_for('post_job') }}">Post a Job</a></li>
+                        <li><a href="{{ url_for('text_extractor') }}">Text Extractor</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4">

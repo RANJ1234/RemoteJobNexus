@@ -6,8 +6,8 @@ import io
 import json
 from functools import wraps
 from app import app, job_store, content_store, user_store
+from functools import wraps
 from scraper import extract_job_details, is_valid_url, fallback_extraction
-from web_scraper import get_website_text_content, summarize_webpage
 
 @app.route('/')
 def index():
@@ -112,6 +112,15 @@ def admin_reset_password():
         flash('Invalid or expired token', 'error')
     return render_template('admin/reset_password.html')
 
+def jobs():
+    """Job listings page with all available jobs."""
+    search_query = request.args.get('q', '')
+    if search_query:
+        jobs_list = job_store.search_jobs(search_query)
+    else:
+        jobs_list = job_store.get_all_jobs()
+    
+    return render_template('jobs.html', jobs=jobs_list, search_query=search_query)
 
 @app.route('/job/<int:job_id>')
 def job_detail(job_id):
@@ -216,7 +225,15 @@ def server_error(e):
     """Handle 500 errors."""
     return render_template('base.html', error_message="Internal server error"), 500
 
-# Note: We already have admin_required decorator defined above, so we're removing this duplicate
+# Admin authentication decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session or 'admin' not in user_store.get_user_roles(session['username']):
+            flash('Please log in to access the admin panel', 'error')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Admin routes
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -457,32 +474,3 @@ def admin_blog():
         flash('Post added successfully', 'success')
         return redirect(url_for('blog_post', post_id=post_id))
     return render_template('admin/blog.html', posts=content_store.get_all_posts())
-
-
-@app.route('/text-extractor', methods=['GET', 'POST'])
-def text_extractor():
-    """Page for extracting text content from any website"""
-    extracted_text = ""
-    metadata = {}
-    url = ""
-    
-    if request.method == 'POST':
-        url = request.form.get('url', '')
-        if not url or not is_valid_url(url):
-            flash('Please enter a valid URL', 'error')
-        else:
-            try:
-                # Get the text content
-                extracted_text = get_website_text_content(url)
-                # Also try to get metadata
-                summary = summarize_webpage(url)
-                if isinstance(summary, dict) and "error" not in summary:
-                    metadata = summary
-            except Exception as e:
-                logging.error(f"Error extracting content: {str(e)}")
-                flash(f"Error extracting content: {str(e)}", "error")
-    
-    return render_template('text_extractor.html', 
-                          extracted_text=extracted_text, 
-                          metadata=metadata,
-                          url=url)

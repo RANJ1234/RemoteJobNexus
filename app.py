@@ -1,7 +1,7 @@
 import os
 import logging
+import datetime
 from flask import Flask
-from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -33,7 +33,7 @@ class JobStore:
             'contact_email': job_data.get('contact_email', ''),
             'job_type': job_data.get('job_type', 'Full-time'),
             'job_category': job_data.get('job_category', 'White-collar'),
-            'date_posted': datetime.now(),
+            'date_posted': datetime.datetime.now(),
             'source_url': job_data.get('source_url', '')
         }
         
@@ -178,6 +178,34 @@ class ContentStore:
             self.content['carousel'][index].update(item_data)
             return True
         return False
+        
+    # Blog-related methods
+    def add_post(self, title, content, author, tags=None):
+        """Add a new blog post"""
+        if tags is None:
+            tags = []
+        post = {
+            'id': self.post_id_counter,
+            'title': title,
+            'content': content,
+            'author': author,
+            'date_posted': datetime.datetime.now(),
+            'tags': tags
+        }
+        self.posts.append(post)
+        self.post_id_counter += 1
+        return post['id']
+    
+    def get_post(self, post_id):
+        """Get a specific blog post by ID"""
+        for post in self.posts:
+            if post['id'] == post_id:
+                return post
+        return None
+    
+    def get_all_posts(self):
+        """Get all blog posts, sorted by date"""
+        return sorted(self.posts, key=lambda x: x['date_posted'], reverse=True)
 
 # Initialize the content store
 content_store = ContentStore()
