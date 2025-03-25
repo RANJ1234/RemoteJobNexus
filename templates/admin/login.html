@@ -1,35 +1,27 @@
+{% extends 'base.html' %}
 
-{% extends "admin/base.html" %}
-
-{% block title %}Login - Remote Work{% endblock %}
+{% block title %}Admin Login - Remote Work{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Login</h4>
+<div style="max-width: 500px; margin: 0 auto; padding: 2rem 0;">
+    <h1 style="text-align: center; margin-bottom: 2rem;">Admin Login</h1>
+    
+    <div class="card" style="padding: 2rem;">
+        <form action="{{ url_for('admin_login') }}" method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
             </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('admin_login') }}">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Login</button>
-                        <a href="{{ url_for('admin_forgot_password') }}" class="btn btn-link">Forgot Password?</a>
-                    </div>
-                </form>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
             </div>
-            <div class="card-footer text-center">
-                <a href="{{ url_for('index') }}">Back to website</a>
+            
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-accent" style="width: 100%;">Login</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>
 {% endblock %}

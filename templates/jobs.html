@@ -1,127 +1,105 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Browse Remote Jobs - Remote Work{% endblock %}
+{% block title %}Remote Job Listings{% endblock %}
 
 {% block content %}
-<section class="page-header">
-    <div class="container">
-        <h1>Browse <span class="accent-text">Remote Jobs</span></h1>
-        <p>Discover remote opportunities tailored for you</p>
-    </div>
-</section>
+<h1>Remote Job Opportunities</h1>
 
-<section class="jobs-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-3 mb-4">
-                <div class="filter-sidebar">
-                    <h4>Search</h4>
-                    <form action="{{ url_for('jobs') }}" method="get">
-                        <div class="mb-3">
-                            <div class="input-group">
-                                <input type="text" name="q" class="form-control" placeholder="Keywords..." value="{{ search_query }}">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                    
-                    <hr>
-                    
-                    <h4>Job Categories</h4>
-                    <div class="quick-links">
-                        <a href="{{ url_for('jobs') }}" class="badge bg-primary-light">All Jobs</a>
-                        <a href="{{ url_for('jobs', q='White-collar') }}" class="badge bg-primary-light">White-collar</a>
-                        <a href="{{ url_for('jobs', q='Blue-collar') }}" class="badge bg-primary-light">Blue-collar</a>
-                        <a href="{{ url_for('jobs', q='Grey-collar') }}" class="badge bg-primary-light">Grey-collar</a>
-                    </div>
-
-                    <hr>
-                    
-                    <h4>Quick Links</h4>
-                    <div class="quick-links">
-                        <a href="{{ url_for('jobs', q='developer') }}" class="badge bg-primary-light">Developer</a>
-                        <a href="{{ url_for('jobs', q='designer') }}" class="badge bg-primary-light">Designer</a>
-                        <a href="{{ url_for('jobs', q='marketing') }}" class="badge bg-primary-light">Marketing</a>
-                        <a href="{{ url_for('jobs', q='customer service') }}" class="badge bg-primary-light">Customer Service</a>
-                        <a href="{{ url_for('jobs', q='healthcare') }}" class="badge bg-primary-light">Healthcare</a>
-                        <a href="{{ url_for('jobs', q='maintenance') }}" class="badge bg-primary-light">Maintenance</a>
-                    </div>
-                    
-                    <hr>
-                    
-                    <h4>Job Type</h4>
-                    <div class="quick-links">
-                        <a href="{{ url_for('jobs', q='full-time') }}" class="badge bg-primary-light">Full-time</a>
-                        <a href="{{ url_for('jobs', q='part-time') }}" class="badge bg-primary-light">Part-time</a>
-                        <a href="{{ url_for('jobs', q='contract') }}" class="badge bg-primary-light">Contract</a>
-                        <a href="{{ url_for('jobs', q='freelance') }}" class="badge bg-primary-light">Freelance</a>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="post-job-promo">
-                        <h5>Hiring remotely?</h5>
-                        <p>Post your job opening and reach talented remote workers.</p>
-                        <a href="{{ url_for('post_job') }}" class="btn btn-primary btn-sm w-100">Post a Job</a>
-                    </div>
-                </div>
-            </div>
+<div style="display: flex; flex-wrap: wrap; gap: 2rem; margin: 2rem 0;">
+    <!-- Sidebar with filters -->
+    <div style="flex: 0 0 250px;">
+        <div class="card">
+            <h3>Filter Jobs</h3>
             
-            <div class="col-lg-9">
-                {% if search_query %}
-                <div class="search-results-header">
-                    <h3>Search results for "{{ search_query }}"</h3>
-                    <p>{{ jobs|length }} jobs found</p>
+            <form action="{{ url_for('jobs') }}" method="get">
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category">
+                        <option value="">All Categories</option>
+                        <option value="white-collar" {% if category == 'white-collar' %}selected{% endif %}>White-Collar</option>
+                        <option value="blue-collar" {% if category == 'blue-collar' %}selected{% endif %}>Blue-Collar</option>
+                        <option value="grey-collar" {% if category == 'grey-collar' %}selected{% endif %}>Grey-Collar</option>
+                    </select>
                 </div>
-                {% endif %}
                 
-                {% if jobs %}
-                    <div class="job-list">
-                        {% for job in jobs %}
-                            <div class="job-list-item" data-aos="fade-up">
-                                <div class="job-list-content">
-                                    <h3 class="job-title">
-                                        <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
-                                    </h3>
-                                    <div class="company-name">{{ job.company }}</div>
-                                    <div class="job-meta">
-                                        <span class="badge bg-primary-light"><i class="fas fa-map-marker-alt"></i> {{ job.location }}</span>
-                                        <span class="badge bg-secondary-light"><i class="fas fa-briefcase"></i> {{ job.job_type }}</span>
-                                        {% if job.job_category %}
-                                            <span class="badge bg-info-light"><i class="fas fa-tag"></i> {{ job.job_category }}</span>
-                                        {% endif %}
-                                        {% if job.salary_range %}
-                                            <span class="badge bg-success-light"><i class="fas fa-dollar-sign"></i> {{ job.salary_range }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="job-description">
-                                        {{ job.description|truncate(150) }}
-                                    </div>
-                                </div>
-                                <div class="job-list-footer">
-                                    <span class="job-date"><i class="far fa-calendar-alt"></i> Posted {{ format_date(job.date_posted) }}</span>
-                                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-search empty-icon"></i>
-                        <h3>No jobs found</h3>
-                        {% if search_query %}
-                            <p>We couldn't find any jobs matching "{{ search_query }}"</p>
-                            <a href="{{ url_for('jobs') }}" class="btn btn-outline-primary mt-3">View All Jobs</a>
-                        {% else %}
-                            <p>No job listings are available yet</p>
-                            <a href="{{ url_for('post_job') }}" class="btn btn-primary mt-3">Post a Job</a>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            </div>
+                <div class="form-group">
+                    <label for="job_type">Job Type</label>
+                    <select id="job_type" name="job_type">
+                        <option value="">All Types</option>
+                        <option value="Full-time" {% if job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                        <option value="Part-time" {% if job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                        <option value="Contract" {% if job_type == 'Contract' %}selected{% endif %}>Contract</option>
+                        <option value="Freelance" {% if job_type == 'Freelance' %}selected{% endif %}>Freelance</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location" value="{{ location }}" placeholder="E.g., Remote, USA, Global">
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%;">Apply Filters</button>
+            </form>
+        </div>
+        
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <a href="{{ url_for('post_job') }}" class="btn btn-accent" style="width: 100%;">Post a Job</a>
         </div>
     </div>
-</section>
+    
+    <!-- Main job listings -->
+    <div style="flex: 1; min-width: 0;">
+        {% if jobs %}
+            <div class="job-list">
+                {% for job in jobs %}
+                    <div class="card" style="padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <h2 style="margin-bottom: 0.5rem;"><a href="{{ url_for('job_detail', job_id=job.id) }}" style="color: var(--primary-color); text-decoration: none;">{{ job.title }}</a></h2>
+                                <div class="job-meta">
+                                    <span>{{ job.company }}</span>
+                                    <span>{{ job.location }}</span>
+                                    {% if job.job_type %}
+                                        <span>{{ job.job_type }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                {% if job.posted_date %}
+                                    <span style="font-size: 0.9rem; color: #666;">{{ job.posted_date.strftime('%b %d, %Y') }}</span>
+                                {% endif %}
+                                {% if job.category %}
+                                    <div style="margin-top: 0.5rem;">
+                                        <span class="badge">{{ job.category }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 1rem 0;">
+                            <p>{{ job.description[:200] }}{% if job.description|length > 200 %}...{% endif %}</p>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                {% if job.salary %}
+                                    <span style="font-weight: 500;">{{ job.salary }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn">View Details</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="text-align: center; padding: 3rem 2rem;">
+                <h3>No jobs found matching your filters.</h3>
+                <p>Try adjusting your search criteria or check back later for new opportunities.</p>
+                <a href="{{ url_for('jobs') }}" class="btn" style="margin-top: 1rem;">View All Jobs</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

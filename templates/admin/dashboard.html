@@ -1,33 +1,44 @@
-{% extends "admin/base.html" %}
+{% extends 'base.html' %}
 
 {% block title %}Admin Dashboard - Remote Work{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Jobs</h5>
-                <p class="card-text">Total Jobs: {{ jobs_count }}</p>
-                <a href="{{ url_for('admin_jobs') }}" class="btn btn-primary">Manage Jobs</a>
-            </div>
-        </div>
+<h1>Admin Dashboard</h1>
+
+<div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 2rem 0;">
+    <div class="card" style="flex: 1; min-width: 200px; text-align: center; padding: 1.5rem;">
+        <h3>{{ job_count }}</h3>
+        <p>Total Jobs</p>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Users</h5>
-                <a href="{{ url_for('admin_users') }}" class="btn btn-primary">Manage Users</a>
-            </div>
-        </div>
+    
+    <div class="card" style="flex: 1; min-width: 200px; text-align: center; padding: 1.5rem;">
+        <h3>{{ active_jobs }}</h3>
+        <p>Active Jobs</p>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Content</h5>
-                <a href="{{ url_for('admin_content') }}" class="btn btn-primary">Manage Content</a>
-            </div>
-        </div>
+    
+    <div class="card" style="flex: 1; min-width: 200px; text-align: center; padding: 1.5rem;">
+        <h3>{{ user_count }}</h3>
+        <p>Users</p>
     </div>
+</div>
+
+<h2>Admin Actions</h2>
+
+<div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1.5rem 0;">
+    <div class="card" style="flex: 1; min-width: 250px;">
+        <h3>Job Management</h3>
+        <p>View, edit, or delete job listings.</p>
+        <a href="{{ url_for('admin_jobs') }}" class="btn" style="width: 100%; margin-top: 1rem;">Manage Jobs</a>
+    </div>
+    
+    <div class="card" style="flex: 1; min-width: 250px;">
+        <h3>Export Data</h3>
+        <p>Export jobs data in JSON format.</p>
+        <a href="{{ url_for('admin_export_jobs') }}" class="btn" style="width: 100%; margin-top: 1rem;" target="_blank">Export Jobs</a>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('admin_logout') }}" class="btn" style="background-color: #777;">Logout</a>
 </div>
 {% endblock %}

@@ -1,131 +1,239 @@
-{% extends "admin/base.html" %}
+{% extends 'admin/base.html' %}
 
-{% block title %}Job Scraper - Remote Work Admin{% endblock %}
-
-{% block head %}
-<style>
-    .scraper-card {
-        border-radius: 0.5rem;
-    }
-    .scraper-info {
-        background-color: #f8f9fa;
-        border-left: 4px solid #6c757d;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    .url-examples {
-        font-size: 0.9rem;
-    }
-</style>
-{% endblock %}
+{% block title %}Extract Job Details - Admin Dashboard{% endblock %}
+{% block header_title %}Job Extraction Tool{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2 class="mb-4">Job URL Scraper</h2>
+<div class="content-card">
+    <h5 class="mb-4">Extract Job Details from URL</h5>
     
     <div class="row">
-        <div class="col-md-8">
-            <div class="card scraper-card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Scrape Job from URL</h5>
-                </div>
-                <div class="card-body">
-                    <div class="scraper-info">
-                        <h5>How It Works</h5>
-                        <p>Enter the URL of a job posting, and our system will attempt to extract job details automatically. The scraped job will be added directly to your job listings.</p>
-                        <p class="mb-0"><strong>Tip:</strong> For best results, use URLs from major job boards and company career pages.</p>
-                    </div>
-                    
-                    <form method="POST" action="{{ url_for('admin_scrape_job') }}">
-                        <div class="mb-3">
-                            <label for="url" class="form-label">Job Posting URL</label>
-                            <input type="url" class="form-control" id="url" name="url" placeholder="https://example.com/jobs/remote-developer" required>
-                            <div class="url-examples mt-2">
-                                <strong>Example URLs:</strong>
-                                <ul>
-                                    <li>LinkedIn: https://www.linkedin.com/jobs/view/123456789</li>
-                                    <li>Indeed: https://www.indeed.com/viewjob?jk=abcdef123456</li>
-                                    <li>Remote OK: https://remoteok.com/remote-jobs/123456-remote-job</li>
-                                    <li>Company Sites: https://example.com/careers/job-posting</li>
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">Scrape Job Details</button>
-                        <a href="{{ url_for('admin_jobs') }}" class="btn btn-secondary ms-2">Back to Jobs</a>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="card scraper-card">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Bulk Job Scraping</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-3">Need to scrape multiple job listings at once? Our system can scrape multiple job postings from a list of URLs.</p>
-                    
-                    <form method="POST" action="{{ url_for('admin_scrape_job') }}" id="bulkScrapeForm">
-                        <input type="hidden" name="bulk_mode" value="true">
-                        <div class="mb-3">
-                            <label for="bulk_urls" class="form-label">Job Posting URLs (one per line)</label>
-                            <textarea class="form-control" id="bulk_urls" name="bulk_urls" rows="5" placeholder="https://example.com/jobs/job1&#10;https://example.com/jobs/job2&#10;https://example.com/jobs/job3"></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-success" disabled>
-                            Bulk Scrape (Coming Soon)
+        <div class="col-md-6">
+            <form id="jobExtractForm">
+                <div class="mb-3">
+                    <label for="jobUrl" class="form-label">Job Posting URL</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-link"></i></span>
+                        <input type="url" class="form-control" id="jobUrl" name="url" 
+                               placeholder="https://example.com/job-posting" required>
+                        <button class="btn btn-primary" type="submit" id="extractBtn">
+                            <i class="fas fa-search me-1"></i> Extract
                         </button>
-                        <div class="text-muted mt-2">
-                            <small>Bulk scraping functionality will be available in the next update.</small>
-                        </div>
-                    </form>
+                    </div>
+                    <div class="form-text">Enter the URL of a job posting to extract its details.</div>
                 </div>
-            </div>
+            </form>
+            
+            <div id="extractionStatus" class="alert d-none my-3"></div>
         </div>
         
-        <div class="col-md-4">
-            <div class="card scraper-card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Data Extraction</h5>
-                </div>
+        <div class="col-md-6">
+            <div class="card">
                 <div class="card-body">
-                    <h6>Information We Extract</h6>
-                    <ul>
-                        <li>Job Title</li>
-                        <li>Company Name</li>
-                        <li>Location (defaults to Remote)</li>
-                        <li>Job Description</li>
-                        <li>Requirements</li>
-                        <li>Salary Range (when available)</li>
-                        <li>Job Type</li>
-                        <li>Job Category (Blue/White/Grey-collar)</li>
-                        <li>Application URL</li>
-                    </ul>
-                    
-                    <hr>
-                    
-                    <h6>Extraction Methods</h6>
-                    <ol>
-                        <li>Primary: Advanced content extraction with Trafilatura</li>
-                        <li>Fallback: HTML parsing with BeautifulSoup</li>
-                        <li>Heuristic analysis for field identification</li>
-                    </ol>
-                </div>
-            </div>
-            
-            <div class="card scraper-card">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0">Important Notes</h5>
-                </div>
-                <div class="card-body">
-                    <ul>
-                        <li>Our scraper respects robots.txt directives and site Terms of Service</li>
-                        <li>Not all job sites allow scraping - results may vary</li>
-                        <li>You may need to manually edit scraped jobs to add missing details</li>
-                        <li>The scraper automatically detects job categories based on keywords</li>
+                    <h6 class="card-title"><i class="fas fa-info-circle me-2"></i>How It Works</h6>
+                    <p class="card-text">This tool attempts to automatically extract job details from various job posting websites.</p>
+                    <ul class="mb-0">
+                        <li>The extracted information may not be 100% accurate</li>
+                        <li>Review and edit the results before saving</li>
+                        <li>Works best with popular job boards and company career pages</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Job Form (initially hidden) -->
+    <div id="jobFormContainer" class="mt-4 d-none">
+        <h5 class="mb-3">Job Details</h5>
+        <p class="text-muted mb-4">Review and edit the extracted information before saving.</p>
+        
+        <form id="jobSaveForm" action="{{ url_for('post_job') }}" method="post">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Job Title *</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="company" class="form-label">Company *</label>
+                        <input type="text" class="form-control" id="company" name="company" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location *</label>
+                        <input type="text" class="form-control" id="location" name="location" required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Job Category</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">-- Select Category --</option>
+                            <option value="white-collar">White Collar</option>
+                            <option value="blue-collar">Blue Collar</option>
+                            <option value="grey-collar">Grey Collar</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="job_type" class="form-label">Job Type</label>
+                        <select class="form-select" id="job_type" name="job_type">
+                            <option value="">-- Select Type --</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Temporary">Temporary</option>
+                            <option value="Freelance">Freelance</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="salary" class="form-label">Salary Range</label>
+                        <input type="text" class="form-control" id="salary" name="salary" 
+                               placeholder="e.g. $50,000 - $70,000 per year">
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Job Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="requirements" class="form-label">Requirements</label>
+                        <textarea class="form-control" id="requirements" name="requirements" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="application_url" class="form-label">Application URL</label>
+                        <input type="url" class="form-control" id="application_url" name="application_url">
+                        <input type="hidden" id="source_url" name="source_url">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Job
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const extractForm = document.getElementById('jobExtractForm');
+    const jobUrl = document.getElementById('jobUrl');
+    const extractBtn = document.getElementById('extractBtn');
+    const extractionStatus = document.getElementById('extractionStatus');
+    const jobFormContainer = document.getElementById('jobFormContainer');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    // Form fields
+    const title = document.getElementById('title');
+    const company = document.getElementById('company');
+    const location = document.getElementById('location');
+    const category = document.getElementById('category');
+    const jobType = document.getElementById('job_type');
+    const salary = document.getElementById('salary');
+    const description = document.getElementById('description');
+    const requirements = document.getElementById('requirements');
+    const applicationUrl = document.getElementById('application_url');
+    const sourceUrl = document.getElementById('source_url');
+    
+    extractForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!jobUrl.value) {
+            showExtractionStatus('danger', 'Please enter a valid job posting URL');
+            return;
+        }
+        
+        // Disable button and show loading
+        extractBtn.disabled = true;
+        extractBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Extracting...';
+        showExtractionStatus('info', 'Extracting job details. This may take a few moments...');
+        
+        // Make the API call
+        fetch('/extract-job', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'url=' + encodeURIComponent(jobUrl.value)
+        })
+        .then(response => response.json())
+        .then(data => {
+            extractBtn.disabled = false;
+            extractBtn.innerHTML = '<i class="fas fa-search me-1"></i> Extract';
+            
+            if (data.error) {
+                showExtractionStatus('danger', 'Error: ' + data.error);
+                return;
+            }
+            
+            // Populate the form
+            populateForm(data);
+            showExtractionStatus('success', 'Job details extracted successfully. Please review and edit before saving.');
+            jobFormContainer.classList.remove('d-none');
+        })
+        .catch(error => {
+            extractBtn.disabled = false;
+            extractBtn.innerHTML = '<i class="fas fa-search me-1"></i> Extract';
+            showExtractionStatus('danger', 'Error: ' + error.message);
+        });
+    });
+    
+    resetBtn.addEventListener('click', function() {
+        extractForm.reset();
+        document.getElementById('jobSaveForm').reset();
+        jobFormContainer.classList.add('d-none');
+        extractionStatus.classList.add('d-none');
+    });
+    
+    function populateForm(data) {
+        title.value = data.title || '';
+        company.value = data.company || '';
+        location.value = data.location || '';
+        category.value = data.category || '';
+        jobType.value = data.job_type || '';
+        salary.value = data.salary || '';
+        description.value = data.description || '';
+        requirements.value = data.requirements || '';
+        applicationUrl.value = data.application_url || '';
+        sourceUrl.value = data.source_url || '';
+        
+        // Highlight populated fields
+        highlightPopulatedFields();
+    }
+    
+    function showExtractionStatus(type, message) {
+        extractionStatus.textContent = message;
+        extractionStatus.className = `alert alert-${type}`;
+        extractionStatus.classList.remove('d-none');
+    }
+    
+    function highlightPopulatedFields() {
+        const formFields = [title, company, location, category, jobType, 
+                           salary, description, requirements, applicationUrl];
+        
+        formFields.forEach(field => {
+            if (field.value) {
+                field.classList.add('is-valid');
+            } else {
+                field.classList.remove('is-valid');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

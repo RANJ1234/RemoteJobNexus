@@ -1,371 +1,311 @@
 import os
 import json
-import logging
+import sqlite3
 from datetime import datetime
-from flask import Flask, g
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Initialize the app
+app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET", "remote_work_dev_key")
 
-# Content store for website content
-class ContentStore:
-    def __init__(self, db_session):
-        self._content = {}  # Initialize with empty dict to avoid None errors
-        self.db_session = db_session
-        self._initialized = False
-    
-    @property
-    def content(self):
-        """Lazy-loaded content - only initialize when needed"""
-        if not self._initialized:
-            self._initialize_content()
-        return self._content
-    
-    def _initialize_content(self):
-        """Initialize the default content for the website"""
-        from models import WebsiteContent
-        
-        # Check if content exists in database
-        content_record = WebsiteContent.query.first()
-        
-        if content_record and content_record.content:
-            # Load content from database
-            self._content = json.loads(content_record.content)
-        else:
-            # Create default content
-            self._content = {
-                'site_info': {
-                    'title': 'Remote Work',
-                    'tagline': 'Find Remote Jobs Worldwide',
-                    'description': 'The best place to find and post remote jobs across blue-collar, white-collar, and grey-collar industries.',
-                    'footer_text': '© 2025 Remote Work. All rights reserved.'
-                },
-                'homepage': {
-                    'hero_title': 'Remote Work for Everyone',
-                    'hero_subtitle': 'Discover remote opportunities across blue, white, and grey-collar jobs worldwide',
-                    'cta_button': 'Find Jobs',
-                    'cta_url': '/jobs',
-                    'section_titles': {
-                        'featured': 'Featured Remote Jobs',
-                        'categories': 'Job Categories',
-                        'testimonials': 'Success Stories'
-                    }
-                },
-                'categories': {
-                    'white_collar': {
-                        'title': 'White-Collar Jobs',
-                        'description': 'Professional, managerial, and administrative remote positions',
-                        'examples': 'Software Developers, Marketers, Accountants, HR Managers'
-                    },
-                    'blue_collar': {
-                        'title': 'Blue-Collar Jobs',
-                        'description': 'Technical, trade, and manual labor positions with remote components',
-                        'examples': 'Remote Construction Managers, Virtual Electrician Consultants, Remote Safety Inspectors'
-                    },
-                    'grey_collar': {
-                        'title': 'Grey-Collar Jobs',
-                        'description': 'Hybrid positions combining technical and professional skills',
-                        'examples': 'IT Technicians, Healthcare Technicians, Culinary Consultants'
-                    }
-                },
-                'carousel': [
-                    {
-                        'title': 'Find Your Remote Dream Job',
-                        'subtitle': 'Browse thousands of remote opportunities worldwide',
-                        'image_url': '/static/images/slide1.jpg',
-                        'cta_text': 'Start Searching',
-                        'cta_url': '/jobs'
-                    },
-                    {
-                        'title': 'Hire Remote Talent',
-                        'subtitle': 'Post jobs and reach qualified remote candidates',
-                        'image_url': '/static/images/slide2.jpg',
-                        'cta_text': 'Post a Job',
-                        'cta_url': '/post-job'
-                    },
-                    {
-                        'title': 'Remote Work Resources',
-                        'subtitle': 'Learn how to thrive in a remote work environment',
-                        'image_url': '/static/images/slide3.jpg',
-                        'cta_text': 'Read Our Blog',
-                        'cta_url': '/blog'
-                    }
-                ]
-            }
-            
-            # Save default content to database
-            if not content_record:
-                content_record = WebsiteContent(content=json.dumps(self._content))
-                self.db_session.add(content_record)
-            else:
-                content_record.content = json.dumps(self._content)
-                
-            self.db_session.commit()
-            
-        self._initialized = True
+# Database configuration
+DB_PATH = "jobs.db"
 
-    def get_section(self, section_name):
-        """Get content for a specific section"""
-        sections = section_name.split('.')
-        result = self.content
-        for section in sections:
-            if section in result:
-                result = result[section]
-            else:
-                return None
-        return result
-    
-    def update_section(self, section_name, content_data):
-        """Update content for a specific section"""
-        from models import WebsiteContent
-        
-        sections = section_name.split('.')
-        target = self.content
-        
-        # Navigate to the parent section
-        for section in sections[:-1]:
-            if section not in target:
-                target[section] = {}
-            target = target[section]
-        
-        # Update the final section
-        target[sections[-1]] = content_data
-        
-        # Save changes to database
-        content_record = WebsiteContent.query.first()
-        if not content_record:
-            content_record = WebsiteContent(content=json.dumps(self.content))
-            self.db_session.add(content_record)
-        else:
-            content_record.content = json.dumps(self.content)
-            
-        self.db_session.commit()
-        return True
-    
-    def add_carousel_item(self, item_data):
-        """Add a new carousel item"""
-        from models import WebsiteContent
-        
-        if 'carousel' not in self.content:
-            self.content['carousel'] = []
-        
-        self.content['carousel'].append(item_data)
-        
-        # Save changes to database
-        content_record = WebsiteContent.query.first()
-        if content_record:
-            content_record.content = json.dumps(self.content)
-            self.db_session.commit()
-            
-        return len(self.content['carousel']) - 1  # Return the index of the new item
-    
-    def remove_carousel_item(self, index):
-        """Remove a carousel item by index"""
-        from models import WebsiteContent
-        
-        if 'carousel' in self.content and 0 <= index < len(self.content['carousel']):
-            self.content['carousel'].pop(index)
-            
-            # Save changes to database
-            content_record = WebsiteContent.query.first()
-            if content_record:
-                content_record.content = json.dumps(self.content)
-                self.db_session.commit()
-                
-            return True
-        return False
-    
-    def update_carousel_item(self, index, item_data):
-        """Update a carousel item by index"""
-        from models import WebsiteContent
-        
-        if 'carousel' in self.content and 0 <= index < len(self.content['carousel']):
-            self.content['carousel'][index] = item_data
-            
-            # Save changes to database
-            content_record = WebsiteContent.query.first()
-            if content_record:
-                content_record.content = json.dumps(self.content)
-                self.db_session.commit()
-                
-            return True
-        return False
-    
-    def add_post(self, title, content, author, tags=None):
-        """Add a new blog post"""
-        from models import BlogPost
-        
-        # Create new blog post in database
-        new_post = BlogPost(
-            title=title,
-            content=content,
-            author=author,
-            tags=','.join(tags) if tags else ''
-        )
-        self.db_session.add(new_post)
-        self.db_session.commit()
-        
-        return str(new_post.id)
-    
-    def get_post(self, post_id):
-        """Get a specific blog post by ID"""
-        from models import BlogPost
-        
-        post = BlogPost.query.get(post_id)
-        if not post:
-            return None
-            
-        return {
-            'id': str(post.id),
-            'title': post.title,
-            'content': post.content,
-            'author': post.author,
-            'date': post.created_at.strftime('%Y-%m-%d'),
-            'tags': post.tags.split(',') if post.tags else []
-        }
-    
-    def get_all_posts(self):
-        """Get all blog posts, sorted by date"""
-        from models import BlogPost
-        
-        posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
-        return [
-            {
-                'id': str(post.id),
-                'title': post.title,
-                'content': post.content,
-                'author': post.author,
-                'date': post.created_at.strftime('%Y-%m-%d'),
-                'tags': post.tags.split(',') if post.tags else []
-            }
-            for post in posts
-        ]
+# Helper functions for database
+def get_db():
+    """Get database connection"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-# ====================================================
-# Initialize database and app components
-# ====================================================
-def create_app():
-    """Create and configure the Flask application"""
-    app = Flask(__name__)
+def init_db():
+    """Initialize database tables"""
+    conn = get_db()
+    cursor = conn.cursor()
     
-    # Configure app
-    app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-    }
-    app.config['ADMIN_URL_PREFIX'] = '/admin'
+    # Create jobs table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS jobs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        company TEXT NOT NULL,
+        location TEXT NOT NULL,
+        job_type TEXT,
+        category TEXT,
+        salary TEXT,
+        description TEXT NOT NULL,
+        requirements TEXT,
+        contact_email TEXT,
+        application_url TEXT,
+        posted_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active INTEGER DEFAULT 1,
+        views INTEGER DEFAULT 0,
+        source_url TEXT
+    )
+    ''')
     
-    # Initialize database and login manager
-    from db import db, init_app, login_manager
-    init_app(app)
+    # Create users table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        role TEXT DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
     
-    # Create content store instance
-    content_store = None
-    
-    # Store in global context
-    @app.before_request
-    def before_request():
-        # Set up database tables if they don't exist yet
-        if not getattr(g, '_db_initialized', False):
-            db.create_all()
-            g._db_initialized = True
-            
-        # Set up demo data on first request
-        if not getattr(g, '_demo_initialized', False):
-            init_demo_data(db.session)
-            g._demo_initialized = True
-            
-        # Set up content store
-        nonlocal content_store
-        if content_store is None:
-            content_store = ContentStore(db.session)
-        g.content_store = content_store
-    
-    # Import and register routes
-    from routes import register_routes
-    register_routes(app)
-    
-    # Minimal initialization during startup to ensure fast application loading
-    # We'll delay database operations until the first request
-    
-    return app
-
-def init_demo_data(db_session):
-    """Initialize demo data for the application"""
-    from models import UserAccount, Job
-    
-    # Create admin user if not exists
-    admin = UserAccount.query.filter_by(username='admin').first()
+    # Add admin user if not exists
+    cursor.execute("SELECT * FROM users WHERE username = 'admin'")
+    admin = cursor.fetchone()
     if not admin:
-        admin = UserAccount(
-            username='admin',
-            email='admin@remotework.com',
-            full_name='Admin User',
-            role='admin',
-            is_active=True
+        cursor.execute(
+            "INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)",
+            ("admin", "remotework_admin2025", "admin@remotework.com", "admin")
         )
-        admin.set_password('remotework_admin2025')
-        db_session.add(admin)
-        db_session.commit()
-        logger.info("Admin user created")
     
-    # Add sample jobs if none exist
-    if Job.query.count() == 0:
-        sample_jobs = [
-            {
-                'title': 'Senior Frontend Developer',
-                'company': 'TechCorp Inc.',
-                'location': 'Remote (Worldwide)',
-                'salary': '$100,000 - $130,000',
-                'job_type': 'Full-time',
-                'category': 'white-collar',
-                'description': 'We are looking for an experienced frontend developer proficient in React, TypeScript and modern CSS. Must have 5+ years of experience building responsive web applications.',
-                'requirements': '- 5+ years of React experience\n- Strong TypeScript skills\n- Experience with state management solutions\n- Understanding of responsive design principles\n- Good communication skills',
-                'contact_email': 'careers@techcorp.example.com',
-                'application_url': 'https://techcorp.example.com/careers/frontend-dev',
-                'posted_date': datetime.now(),
-                'is_active': True
-            },
-            {
-                'title': 'Remote Construction Project Manager',
-                'company': 'Global Builders',
-                'location': 'Remote (US Based)',
-                'salary': '$85,000 - $110,000',
-                'job_type': 'Contract',
-                'category': 'blue-collar',
-                'description': 'Seeking an experienced construction project manager to oversee projects remotely. Will coordinate with on-site staff and manage project timelines and budgets.',
-                'requirements': '- 8+ years in construction management\n- Experience with remote team coordination\n- Proficient with project management software\n- Strong communication and leadership skills\n- PMP certification preferred',
-                'contact_email': 'jobs@globalbuilders.example.com',
-                'application_url': 'https://globalbuilders.example.com/apply',
-                'posted_date': datetime.now(),
-                'is_active': True
-            },
-            {
-                'title': 'Virtual Customer Service Representative',
-                'company': 'SupportHub',
-                'location': 'Remote (APAC timezone)',
-                'salary': '$40,000 - $55,000',
-                'job_type': 'Full-time',
-                'category': 'grey-collar',
-                'description': 'Join our team providing excellent customer service through chat and phone support. Help customers solve issues with our software products.',
-                'requirements': '- 2+ years in customer service\n- Excellent written and verbal communication\n- Basic troubleshooting skills\n- Experience with CRM systems\n- Reliable internet connection\n- Must be able to work APAC business hours',
-                'contact_email': 'support.hiring@supporthub.example.com',
-                'application_url': 'https://supporthub.example.com/careers',
-                'posted_date': datetime.now(),
-                'is_active': True
-            }
-        ]
-        
-        for job_data in sample_jobs:
-            job = Job(**job_data)
-            db_session.add(job)
-        
-        db_session.commit()
-        logger.info("Sample jobs added to database")
+    conn.commit()
+    conn.close()
 
-# Create the app instance
-app = create_app()
+# Initialize database on startup
+init_db()
+
+# Routes
+@app.route('/')
+def index():
+    """Homepage with featured jobs"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM jobs WHERE is_active = 1 ORDER BY posted_date DESC LIMIT 10"
+    )
+    featured_jobs = cursor.fetchall()
+    conn.close()
+    return render_template('index.html', featured_jobs=featured_jobs)
+
+@app.route('/jobs')
+def jobs():
+    """Job listings page"""
+    category = request.args.get('category', '')
+    job_type = request.args.get('job_type', '')
+    location = request.args.get('location', '')
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    query = "SELECT * FROM jobs WHERE is_active = 1"
+    params = []
+    
+    if category:
+        query += " AND category = ?"
+        params.append(category)
+    if job_type:
+        query += " AND job_type = ?"
+        params.append(job_type)
+    if location:
+        query += " AND location LIKE ?"
+        params.append(f"%{location}%")
+    
+    query += " ORDER BY posted_date DESC"
+    
+    cursor.execute(query, params)
+    all_jobs = cursor.fetchall()
+    conn.close()
+    
+    return render_template('jobs.html', jobs=all_jobs, category=category, job_type=job_type, location=location)
+
+@app.route('/job/<int:job_id>')
+def job_detail(job_id):
+    """Job detail page"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Increment view count
+    cursor.execute("UPDATE jobs SET views = views + 1 WHERE id = ?", (job_id,))
+    conn.commit()
+    
+    # Get job details
+    cursor.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    job = cursor.fetchone()
+    conn.close()
+    
+    if job is None:
+        flash('Job not found', 'error')
+        return redirect(url_for('jobs'))
+    
+    return render_template('job_detail.html', job=job)
+
+@app.route('/post-job', methods=['GET', 'POST'])
+def post_job():
+    """Job submission form"""
+    if request.method == 'POST':
+        title = request.form.get('title')
+        company = request.form.get('company')
+        location = request.form.get('location')
+        job_type = request.form.get('job_type')
+        category = request.form.get('category')
+        salary = request.form.get('salary')
+        description = request.form.get('description')
+        requirements = request.form.get('requirements')
+        contact_email = request.form.get('contact_email')
+        application_url = request.form.get('application_url')
+        source_url = request.form.get('source_url', '')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO jobs 
+            (title, company, location, job_type, category, salary, description, 
+             requirements, contact_email, application_url, source_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (title, company, location, job_type, category, salary, description,
+             requirements, contact_email, application_url, source_url)
+        )
+        conn.commit()
+        conn.close()
+        
+        flash('Job posted successfully!', 'success')
+        return redirect(url_for('jobs'))
+    
+    return render_template('post_job.html')
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page"""
+    if session.get('logged_in'):
+        return redirect(url_for('admin_dashboard'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        conn.close()
+        
+        if user and user['password'] == password:  # Simple password check
+            session['logged_in'] = True
+            session['username'] = username
+            session['role'] = user['role']
+            flash('Login successful!', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('admin/login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Admin logout"""
+    session.pop('logged_in', None)
+    session.pop('username', None)
+    session.pop('role', None)
+    flash('You have been logged out', 'success')
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    """Admin dashboard"""
+    if not session.get('logged_in') or session.get('role') != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('admin_login'))
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM jobs")
+    job_count = cursor.fetchone()['count']
+    
+    cursor.execute("SELECT COUNT(*) as count FROM jobs WHERE is_active = 1")
+    active_jobs = cursor.fetchone()['count']
+    
+    cursor.execute("SELECT COUNT(*) as count FROM users")
+    user_count = cursor.fetchone()['count']
+    conn.close()
+    
+    return render_template('admin/dashboard.html', 
+                          job_count=job_count, 
+                          active_jobs=active_jobs, 
+                          user_count=user_count)
+
+@app.route('/admin/jobs')
+def admin_jobs():
+    """Admin job management"""
+    if not session.get('logged_in') or session.get('role') != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('admin_login'))
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM jobs ORDER BY posted_date DESC")
+    all_jobs = cursor.fetchall()
+    conn.close()
+    
+    return render_template('admin/jobs.html', jobs=all_jobs)
+
+@app.route('/admin/delete-job/<int:job_id>')
+def admin_delete_job(job_id):
+    """Delete a job"""
+    if not session.get('logged_in') or session.get('role') != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('admin_login'))
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+    conn.commit()
+    conn.close()
+    
+    flash('Job deleted successfully', 'success')
+    return redirect(url_for('admin_jobs'))
+
+@app.route('/admin/export-jobs')
+def admin_export_jobs():
+    """Export jobs as JSON"""
+    if not session.get('logged_in') or session.get('role') != 'admin':
+        return jsonify({"error": "Access denied"}), 403
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM jobs")
+    jobs = cursor.fetchall()
+    conn.close()
+    
+    # Convert to list of dicts
+    job_list = []
+    for job in jobs:
+        job_dict = {key: job[key] for key in job.keys()}
+        job_list.append(job_dict)
+    
+    return jsonify(job_list)
+
+@app.route('/extract-job', methods=['POST'])
+def extract_job():
+    """Extract job details from URL (API endpoint)"""
+    url = request.form.get('url', '')
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
+    
+    # Simple job extraction (placeholder)
+    # In a real app, you would use BeautifulSoup or similar
+    job_details = {
+        'title': 'Job extracted from ' + url,
+        'company': 'Company',
+        'location': 'Remote',
+        'description': 'Job description would be extracted from the URL.'
+    }
+    
+    return jsonify(job_details)
+
+@app.route('/health')
+def health():
+    """Health check endpoint"""
+    return jsonify({"status": "ok"})
+
+# Run the app
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)

@@ -1,179 +1,110 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Remote Work - Find Remote Jobs Across the Globe{% endblock %}
+{% block title %}Remote Work Job Board - Find Remote Jobs{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 hero-text">
-                <h1 class="display-4">{{ content.title|default('Find Your Dream <span class="accent-text">Remote Job</span>') }}</h1>
-                <p class="lead">{{ content.subtitle|default('Discover remote opportunities across all industries including blue-collar, white-collar, and grey-collar jobs worldwide.') }}</p>
-                
-                <form action="{{ url_for('jobs') }}" method="get" class="search-form">
-                    <div class="input-group">
-                        <input type="text" name="q" class="form-control" placeholder="{{ content.search_placeholder|default('Search for jobs, skills, or companies...') }}">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i> Search
-                        </button>
-                    </div>
-                </form>
-                
-                <div class="mt-4 hero-cta">
-                    <a href="{{ url_for('jobs') }}" class="btn btn-outline-primary me-3">
-                        <i class="fas fa-list"></i> {{ content.browse_button_text|default('Browse All Jobs') }}
-                    </a>
-                    <a href="{{ url_for('post_job') }}" class="btn btn-primary">
-                        <i class="fas fa-plus-circle"></i> {{ content.post_button_text|default('Post a Job') }}
-                    </a>
-                </div>
-            </div>
-            <div class="col-lg-6 d-none d-lg-block">
-                <div class="hero-scene-container" id="hero-scene"></div>
-            </div>
-        </div>
+<div style="text-align: center; margin: 3rem 0;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Find Remote Work Opportunities</h1>
+    <p style="font-size: 1.2rem; max-width: 700px; margin: 0 auto 2rem auto;">
+        Discover remote job opportunities across blue-collar, white-collar, and grey-collar sectors from around the world.
+    </p>
+    
+    <div style="display: flex; justify-content: center; gap: 1rem; margin: 2rem 0;">
+        <a href="{{ url_for('jobs') }}" class="btn btn-accent" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Browse All Jobs</a>
+        <a href="{{ url_for('post_job') }}" class="btn" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Post a Job</a>
     </div>
-</section>
+</div>
 
-<!-- Carousel Section - Only shown if carousel items exist -->
-{% if carousel and carousel|length > 0 %}
-<section class="carousel-section">
-    <div class="container">
-        <div id="jobCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-indicators">
-                {% for item in carousel %}
-                <button type="button" data-bs-target="#jobCarousel" data-bs-slide-to="{{ loop.index0 }}" 
-                        {% if loop.first %}class="active"{% endif %} aria-current="true" 
-                        aria-label="Slide {{ loop.index }}"></button>
-                {% endfor %}
-            </div>
-            <div class="carousel-inner">
-                {% for item in carousel %}
-                <div class="carousel-item {% if loop.first %}active{% endif %}">
-                    <img src="{{ item.image_url }}" class="d-block w-100" alt="{{ item.title }}">
-                    <div class="carousel-caption d-none d-md-block">
-                        <h3>{{ item.title }}</h3>
-                        <p>{{ item.description }}</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#jobCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#jobCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
+<div style="margin: 3rem 0;">
+    <h2 style="text-align: center; margin-bottom: 2rem;">Job Categories</h2>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;">
+        <div class="card" style="flex: 1; min-width: 250px; text-align: center; padding: 2rem;">
+            <h3>White-Collar</h3>
+            <p>Professional jobs typically performed in an office setting.</p>
+            <a href="{{ url_for('jobs', category='white-collar') }}" class="btn" style="margin-top: 1rem;">Browse Jobs</a>
+        </div>
+        
+        <div class="card" style="flex: 1; min-width: 250px; text-align: center; padding: 2rem;">
+            <h3>Blue-Collar</h3>
+            <p>Skilled trades and manual labor jobs that can be done remotely.</p>
+            <a href="{{ url_for('jobs', category='blue-collar') }}" class="btn" style="margin-top: 1rem;">Browse Jobs</a>
+        </div>
+        
+        <div class="card" style="flex: 1; min-width: 250px; text-align: center; padding: 2rem;">
+            <h3>Grey-Collar</h3>
+            <p>Jobs that blend technical knowledge with hands-on work.</p>
+            <a href="{{ url_for('jobs', category='grey-collar') }}" class="btn" style="margin-top: 1rem;">Browse Jobs</a>
         </div>
     </div>
-</section>
+</div>
+
+{% if featured_jobs %}
+<div style="margin: 3rem 0;">
+    <h2 style="text-align: center; margin-bottom: 1.5rem;">Featured Job Opportunities</h2>
+    
+    <div class="job-grid">
+        {% for job in featured_jobs %}
+            <div class="card job-card">
+                <div class="job-card-content">
+                    <h3>{{ job.title }}</h3>
+                    <div class="job-meta">
+                        <span>{{ job.company }}</span>
+                        <span>{{ job.location }}</span>
+                        {% if job.job_type %}
+                            <span>{{ job.job_type }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if job.category %}
+                        <div style="margin-bottom: 1rem;">
+                            <span class="badge">{{ job.category }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <p>{{ job.description[:150] }}{% if job.description|length > 150 %}...{% endif %}</p>
+                </div>
+                
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn" style="width: 100%;">View Details</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ url_for('jobs') }}" class="btn">View All Jobs</a>
+    </div>
+</div>
 {% endif %}
 
-<section class="featured-jobs">
-    <div class="container">
-        <div class="section-header">
-            <h2>Featured <span class="accent-text">Remote Jobs</span></h2>
-            <p>Handpicked opportunities for remote workers</p>
+<div style="margin: 4rem 0; text-align: center;">
+    <h2>How It Works</h2>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem; text-align: left;">
+        <div style="flex: 1; min-width: 250px;">
+            <h3 style="display: flex; align-items: center;">
+                <span style="background-color: var(--primary-color); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 0.8rem;">1</span>
+                Search Jobs
+            </h3>
+            <p>Browse through our extensive database of remote job opportunities across various sectors and skills.</p>
         </div>
         
-        <div class="row">
-            {% if featured_jobs %}
-                {% for job in featured_jobs %}
-                    <div class="col-md-4 mb-4">
-                        <div class="job-card">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ job.title }}</h5>
-                                <h6 class="card-subtitle mb-2">{{ job.company }}</h6>
-                                <div class="job-meta">
-                                    <span class="badge bg-primary-light"><i class="fas fa-map-marker-alt"></i> {{ job.location }}</span>
-                                    <span class="badge bg-secondary-light"><i class="fas fa-briefcase"></i> {{ job.job_type }}</span>
-                                </div>
-                                <p class="card-text">{{ job.description|truncate(120) }}</p>
-                                <div class="card-footer">
-                                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
-                                    <span class="job-date">{{ format_date(job.date_posted) }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div class="col-12 text-center">
-                    <div class="empty-state">
-                        <i class="fas fa-clipboard-list empty-icon"></i>
-                        <h3>No jobs available yet</h3>
-                        <p>Be the first to post a remote job opportunity!</p>
-                        <a href="{{ url_for('post_job') }}" class="btn btn-primary mt-3">Post a Job</a>
-                    </div>
-                </div>
-            {% endif %}
+        <div style="flex: 1; min-width: 250px;">
+            <h3 style="display: flex; align-items: center;">
+                <span style="background-color: var(--primary-color); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 0.8rem;">2</span>
+                Apply Directly
+            </h3>
+            <p>When you find a job that matches your skills, apply directly through the provided application link or contact information.</p>
         </div>
         
-        <div class="text-center mt-4">
-            <a href="{{ url_for('jobs') }}" class="btn btn-outline-primary">View All Jobs</a>
+        <div style="flex: 1; min-width: 250px;">
+            <h3 style="display: flex; align-items: center;">
+                <span style="background-color: var(--primary-color); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 0.8rem;">3</span>
+                Post Jobs
+            </h3>
+            <p>Employers can easily post remote job opportunities to reach qualified candidates from around the world.</p>
         </div>
     </div>
-</section>
-
-<section class="how-it-works">
-    <div class="container">
-        <div class="section-header">
-            <h2>How It <span class="accent-text">Works</span></h2>
-            <p>Simple steps to find or post remote jobs</p>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-4">
-                <div class="step-card">
-                    <div class="step-icon">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <h3>Browse Jobs</h3>
-                    <p>Explore our curated list of remote opportunities from companies across all industries worldwide.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="step-card">
-                    <div class="step-icon">
-                        <i class="fas fa-laptop-code"></i>
-                    </div>
-                    <h3>Apply Directly</h3>
-                    <p>Find the perfect fit and apply directly through the employer's preferred application method.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="step-card">
-                    <div class="step-icon">
-                        <i class="fas fa-link"></i>
-                    </div>
-                    <h3>Post by URL</h3>
-                    <p>Employers can instantly post jobs by simply pasting a job posting URL - we'll extract the details!</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="cta-section">
-    <div class="container">
-        <div class="cta-content">
-            <h2>Ready to find your next remote opportunity?</h2>
-            <p>Join our global community of remote workers across all job types and industries.</p>
-            <a href="{{ url_for('jobs') }}" class="btn btn-light-outline">Explore Jobs</a>
-        </div>
-    </div>
-</section>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Initialize the hero scene with custom settings
-    document.addEventListener('DOMContentLoaded', function() {
-        initHeroScene('hero-scene');
-    });
-</script>
+</div>
 {% endblock %}
