@@ -1,3 +1,4 @@
-run = ["bash", "run_server.sh"]
-language = "python3"
-entrypoint = "job_api.py"
+run = [
+  "bash",
+  "workflow_job_board.sh"
+]
