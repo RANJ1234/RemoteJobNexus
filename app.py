@@ -269,6 +269,17 @@ def create_app():
     # Store in global context
     @app.before_request
     def before_request():
+        # Set up database tables if they don't exist yet
+        if not getattr(g, '_db_initialized', False):
+            db.create_all()
+            g._db_initialized = True
+            
+        # Set up demo data on first request
+        if not getattr(g, '_demo_initialized', False):
+            init_demo_data(db.session)
+            g._demo_initialized = True
+            
+        # Set up content store
         nonlocal content_store
         if content_store is None:
             content_store = ContentStore(db.session)
@@ -278,11 +289,8 @@ def create_app():
     from routes import register_routes
     register_routes(app)
     
-    # Create DB tables and initialize demo data after app creation
-    @app.before_first_request
-    def initialize_database():
-        db.create_all()
-        init_demo_data(db.session)
+    # Minimal initialization during startup to ensure fast application loading
+    # We'll delay database operations until the first request
     
     return app
 

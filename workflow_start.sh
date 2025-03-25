@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is used to start the application using Gunicorn
+# This script is used to start the application using a tiny Python HTTP server with no dependencies
 
-# Run the application with Gunicorn
-exec gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
+# Run the tiny HTTP server directly
+python tiny_server.py

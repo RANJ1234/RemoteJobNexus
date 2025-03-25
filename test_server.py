@@ -1,10 +1,7 @@
 from flask import Flask
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None, template_folder=None)
 
 @app.route('/')
 def hello():
-    return 'Hello, World! Server is running.'
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    return 'Remote Work API is starting'
