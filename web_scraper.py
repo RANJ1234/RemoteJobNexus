@@ -39,8 +39,42 @@ def get_website_text_content(url):
         str: The extracted text content
     """
     try:
-        downloaded = trafilatura.fetch_url(url)
+        # Enhanced headers to better mimic a browser
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Referer': 'https://www.google.com/'
+        }
+        
+        # Use custom download to bypass trafilatura's default downloader if needed
+        try:
+            downloaded = trafilatura.fetch_url(url, headers=headers)
+            if not downloaded:
+                # If trafilatura's fetch fails, try requests directly
+                session = requests.Session()
+                session.headers.update(headers)
+                response = session.get(url, timeout=15)
+                
+                if response.status_code == 200:
+                    downloaded = response.text
+                else:
+                    logger.warning(f"Failed to fetch URL with requests, status code: {response.status_code}")
+                    return ""
+        except Exception as fetch_error:
+            logger.warning(f"Trafilatura fetch failed, trying requests: {fetch_error}")
+            session = requests.Session()
+            session.headers.update(headers)
+            response = session.get(url, timeout=15)
+            
+            if response.status_code == 200:
+                downloaded = response.text
+            else:
+                logger.warning(f"Failed to fetch URL with requests, status code: {response.status_code}")
+                return ""
+        
         if downloaded:
+            # Extract main content, including tables which often contain job details
             text = trafilatura.extract(downloaded, include_comments=False, 
                                       include_tables=True, include_links=True)
             return text or ""
@@ -81,9 +115,22 @@ def extract_job_details(url):
     }
     
     try:
-        # Basic request to get the page content
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-        response = requests.get(url, headers=headers, timeout=10)
+        # Enhanced headers to mimic a real browser
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0',
+            'TE': 'Trailers',
+            'Referer': 'https://www.google.com/'
+        }
+        # Create a session to maintain cookies
+        session = requests.Session()
+        session.headers.update(headers)
+        response = session.get(url, timeout=15)
         
         if response.status_code != 200:
             response_data['error'] = f"Failed to fetch URL, status code: {response.status_code}"
