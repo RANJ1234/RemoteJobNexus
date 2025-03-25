@@ -6,12 +6,18 @@ import io
 import json
 from functools import wraps
 from app import app, job_store, content_store, user_store
-from scraper import extract_job_details, is_valid_url, fallback_extraction
-from web_scraper import get_website_text_content, summarize_webpage
+# Import only validation function eagerly to avoid circular imports
+from scraper import is_valid_url
+# Other imports will be done lazily in each function to improve startup time
 
 @app.route('/')
 def index():
     """Homepage with featured jobs and search bar."""
+    # Initialize demo jobs if none exist yet (lazy loading)
+    from app import init_demo_jobs
+    if not job_store.jobs:
+        init_demo_jobs()
+        
     # Get the most recent 3 jobs for the featured section
     featured_jobs = job_store.get_all_jobs()[:3]
     # Get content from the content store
@@ -25,6 +31,12 @@ def index():
 @app.route('/jobs')
 def jobs():
     """Job listings page with all available jobs."""
+    # Initialize demo jobs if none exist yet (lazy loading)
+    from app import init_demo_jobs
+    if not job_store.jobs:
+        init_demo_jobs()
+        
+    # Process search query
     search_query = request.args.get('q', '')
     if search_query:
         jobs_list = job_store.search_jobs(search_query)
@@ -159,6 +171,9 @@ def post_job():
     if prefill_url:
         if is_valid_url(prefill_url):
             try:
+                # Import extraction functions lazily
+                from scraper import extract_job_details, fallback_extraction
+                
                 job_data = extract_job_details(prefill_url)
                 if "error" in job_data:
                     # Try fallback extraction method
@@ -185,6 +200,9 @@ def api_extract_job():
         return jsonify({"error": "Invalid URL format"}), 400
     
     try:
+        # Import extraction functions lazily
+        from scraper import extract_job_details, fallback_extraction
+        
         job_data = extract_job_details(url)
         if "error" in job_data:
             # Try fallback extraction
@@ -413,6 +431,9 @@ def admin_scrape_job():
             return render_template('admin/scrape_job.html')
             
         try:
+            # Import extraction functions lazily
+            from scraper import extract_job_details, fallback_extraction
+            
             job_data = extract_job_details(url)
             if "error" in job_data:
                 # Try fallback extraction method
@@ -472,6 +493,9 @@ def text_extractor():
             flash('Please enter a valid URL', 'error')
         else:
             try:
+                # Import trafilatura lazily only when needed
+                from web_scraper import get_website_text_content, summarize_webpage
+                
                 # Get the text content
                 extracted_text = get_website_text_content(url)
                 # Also try to get metadata

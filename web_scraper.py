@@ -1,9 +1,13 @@
-import trafilatura
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Deferred import of trafilatura to improve startup time
+def _import_trafilatura():
+    import trafilatura
+    return trafilatura
 
 def get_website_text_content(url: str) -> str:
     """
@@ -16,6 +20,9 @@ def get_website_text_content(url: str) -> str:
     MLB scores: https://www.mlb.com/scores/YYYY-MM-DD
     """
     try:
+        # Import trafilatura only when needed
+        trafilatura = _import_trafilatura()
+        
         # Send a request to the website
         logger.info(f"Fetching content from URL: {url}")
         downloaded = trafilatura.fetch_url(url)
@@ -45,6 +52,9 @@ def summarize_webpage(url: str) -> dict:
     Returns a dictionary with title, main content, and metadata.
     """
     try:
+        # Import trafilatura only when needed
+        trafilatura = _import_trafilatura()
+        
         # Fetch the URL
         downloaded = trafilatura.fetch_url(url)
         if not downloaded:

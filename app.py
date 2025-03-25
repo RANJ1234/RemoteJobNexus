@@ -1,12 +1,13 @@
 import os
 import logging
 import datetime
+import threading
 from flask import Flask
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging - set to WARNING level to minimize output and improve startup
+logging.basicConfig(level=logging.WARNING)
 
-# Create Flask app
+# Create Flask app with minimal configurations initially
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
@@ -67,50 +68,64 @@ class JobStore:
 # Initialize the job store
 job_store = JobStore()
 
-# Add some initial jobs for demonstration
-job_store.add_job({
-    'title': 'Senior Frontend Developer',
-    'company': 'Anime Tech Inc.',
-    'location': 'Remote (Worldwide)',
-    'description': 'We are looking for an experienced Frontend Developer with expertise in Three.js and WebGL.',
-    'requirements': 'At least 3 years of experience with React, Three.js, and WebGL. Experience with anime-style design is a plus.',
-    'salary_range': '$100,000 - $130,000',
-    'application_url': 'https://example.com/apply',
-    'contact_email': 'jobs@animetech.com',
-    'job_type': 'Full-time'
-})
+# Demo job data - moved to a separate function to defer loading until needed
+def init_demo_jobs():
+    # Add initial jobs for demonstration only if none exist
+    if not job_store.jobs:
+        job_store.add_job({
+            'title': 'Senior Frontend Developer',
+            'company': 'Anime Tech Inc.',
+            'location': 'Remote (Worldwide)',
+            'description': 'We are looking for an experienced Frontend Developer with expertise in Three.js and WebGL.',
+            'requirements': 'At least 3 years of experience with React, Three.js, and WebGL. Experience with anime-style design is a plus.',
+            'salary_range': '$100,000 - $130,000',
+            'application_url': 'https://example.com/apply',
+            'contact_email': 'jobs@animetech.com',
+            'job_type': 'Full-time'
+        })
 
-job_store.add_job({
-    'title': 'Backend Python Developer',
-    'company': 'Sakura Systems',
-    'location': 'Remote (US/EU)',
-    'description': 'Join our team to develop scalable backend solutions for our growing platform.',
-    'requirements': 'Strong experience with Python, Flask, and API development. Knowledge of database design and optimization.',
-    'salary_range': '$90,000 - $120,000',
-    'application_url': 'https://example.com/apply',
-    'contact_email': 'careers@sakurasystems.com',
-    'job_type': 'Full-time'
-})
+        job_store.add_job({
+            'title': 'Backend Python Developer',
+            'company': 'Sakura Systems',
+            'location': 'Remote (US/EU)',
+            'description': 'Join our team to develop scalable backend solutions for our growing platform.',
+            'requirements': 'Strong experience with Python, Flask, and API development. Knowledge of database design and optimization.',
+            'salary_range': '$90,000 - $120,000',
+            'application_url': 'https://example.com/apply',
+            'contact_email': 'careers@sakurasystems.com',
+            'job_type': 'Full-time'
+        })
 
-job_store.add_job({
-    'title': '3D Designer / Animator',
-    'company': 'NeoTokyo Graphics',
-    'location': 'Remote (APAC Preferred)',
-    'description': 'Create stunning 3D anime-style animations and designs for our gaming projects.',
-    'requirements': 'Portfolio showing anime-inspired 3D work. Proficiency in Blender and/or Maya. Experience with character rigging and animation.',
-    'salary_range': '$70,000 - $100,000',
-    'application_url': 'https://example.com/apply',
-    'contact_email': 'hiring@neotokyographics.jp',
-    'job_type': 'Contract'
-})
+        job_store.add_job({
+            'title': '3D Designer / Animator',
+            'company': 'NeoTokyo Graphics',
+            'location': 'Remote (APAC Preferred)',
+            'description': 'Create stunning 3D anime-style animations and designs for our gaming projects.',
+            'requirements': 'Portfolio showing anime-inspired 3D work. Proficiency in Blender and/or Maya. Experience with character rigging and animation.',
+            'salary_range': '$70,000 - $100,000',
+            'application_url': 'https://example.com/apply',
+            'contact_email': 'hiring@neotokyographics.jp',
+            'job_type': 'Contract'
+        })
 
 # Content management for the admin panel
 class ContentStore:
     def __init__(self):
-        # Dictionary to store all site content by section
+        # Dictionary to store all site content by section - lazy initialization
         self.posts = []
         self.post_id_counter = 1
-        self.content = {
+        self._content = None  # Lazy initialization
+    
+    @property
+    def content(self):
+        # Load content only when first accessed
+        if self._content is None:
+            self._content = self._initialize_content()
+        return self._content
+    
+    def _initialize_content(self):
+        # Initialize default content
+        return {
             'homepage': {
                 'hero_title': 'Find Your Remote Dream Job',
                 'hero_subtitle': 'Connect with global opportunities - blue, white, and grey-collar positions available worldwide.',
@@ -207,15 +222,42 @@ class ContentStore:
         """Get all blog posts, sorted by date"""
         return sorted(self.posts, key=lambda x: x['date_posted'], reverse=True)
 
-# Initialize the content store
+# Initialize the content store with lazy loading
 content_store = ContentStore()
 
-# Initialize user store
-from models import User
-user_store = User()
+# Delayed initialization of user store and registration of routes
+# We'll initialize these components just before they're needed
+user_store = None  # Will be initialized on first use
 
-# Import routes after app initialization to avoid circular imports
-from routes import *
+# Create a context processor for initialization
+@app.context_processor
+def inject_init_function():
+    # Make init_demo_jobs available to templates
+    return {'init_demo_jobs': init_demo_jobs}
+
+# Global initialization lock
+_init_lock = threading.RLock()
+_initialized = False
+
+# This function ensures routes and user store are loaded before first request
+@app.before_request
+def ensure_initialization():
+    global _initialized, user_store
+    
+    # Use a lock to prevent multiple threads initializing at once
+    with _init_lock:
+        if not _initialized:
+            # Import and initialize User store
+            from models import User
+            user_store = User()
+            
+            # Import routes module to register all routes
+            import routes
+            
+            # Mark as initialized
+            _initialized = True
 
 if __name__ == '__main__':
+    # Import routes directly when running as main module
+    import routes
     app.run(host='0.0.0.0', port=5000, debug=True)

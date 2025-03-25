@@ -2,9 +2,13 @@ import requests
 from bs4 import BeautifulSoup
 import logging
 import re
-import trafilatura
 from urllib.parse import urlparse
 from web_scraper import get_website_text_content, summarize_webpage
+
+# Deferred import of trafilatura to improve startup time
+def _import_trafilatura():
+    import trafilatura
+    return trafilatura
 
 
 def is_valid_url(url):
@@ -47,6 +51,7 @@ def extract_job_details(url):
         text_content = get_website_text_content(url)
         if "Failed to download content" in text_content or "Error extracting content" in text_content:
             # Try using the original method as fallback
+            trafilatura = _import_trafilatura()
             downloaded = trafilatura.fetch_url(url)
             if not downloaded:
                 raise Exception("Failed to download page content")
