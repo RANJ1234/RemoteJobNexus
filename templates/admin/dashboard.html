@@ -25,18 +25,92 @@
 <h2>Admin Actions</h2>
 
 <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1.5rem 0;">
-    <div class="card" style="flex: 1; min-width: 250px;">
+    <div class="card admin-card" style="flex: 1; min-width: 250px;">
+        <div class="admin-card-icon">
+            <!-- Job Management SVG Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                <path d="M6 12h4"></path>
+                <path d="M14 12h4"></path>
+            </svg>
+        </div>
         <h3>Job Management</h3>
-        <p>View, edit, or delete job listings.</p>
-        <a href="{{ url_for('admin_jobs') }}" class="btn" style="width: 100%; margin-top: 1rem;">Manage Jobs</a>
+        <p>View, edit, or delete job listings from a central dashboard.</p>
+        <a href="{{ url_for('admin_jobs') }}" class="btn admin-btn" style="width: 100%; margin-top: 1rem;">
+            Manage Jobs
+        </a>
     </div>
     
-    <div class="card" style="flex: 1; min-width: 250px;">
+    <div class="card admin-card" style="flex: 1; min-width: 250px;">
+        <div class="admin-card-icon">
+            <!-- Export Data SVG Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+        </div>
         <h3>Export Data</h3>
-        <p>Export jobs data in JSON format.</p>
-        <a href="{{ url_for('admin_export_jobs') }}" class="btn" style="width: 100%; margin-top: 1rem;" target="_blank">Export Jobs</a>
+        <p>Export all job listings data in JSON format for backup or analysis.</p>
+        <a href="{{ url_for('admin_export_jobs') }}" class="btn admin-btn" style="width: 100%; margin-top: 1rem;" target="_blank">
+            Export Jobs
+        </a>
+    </div>
+    
+    <div class="card admin-card" style="flex: 1; min-width: 250px;">
+        <div class="admin-card-icon">
+            <!-- Scrape Job SVG Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+        </div>
+        <h3>Scrape Jobs</h3>
+        <p>Extract job details from external websites automatically.</p>
+        <a href="{{ url_for('admin_scrape_job') }}" class="btn admin-btn" style="width: 100%; margin-top: 1rem;">
+            Scrape Jobs
+        </a>
     </div>
 </div>
+
+<!-- Add CSS for admin cards -->
+<style>
+    .admin-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 1.5rem;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .admin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .admin-card-icon {
+        margin-bottom: 1rem;
+        color: #4a6cf7;
+        background-color: rgba(74, 108, 247, 0.1);
+        padding: 1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .admin-btn {
+        background-color: #4a6cf7;
+        color: white;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+    }
+    
+    .admin-btn:hover {
+        background-color: #3451d1;
+    }
+</style>
 
 <div style="text-align: center; margin-top: 2rem;">
     <a href="{{ url_for('admin_logout') }}" class="btn" style="background-color: #777;">Logout</a>

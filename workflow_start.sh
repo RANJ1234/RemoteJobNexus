@@ -1,3 +1,3 @@
 #!/bin/bash
-# Run direct Flask server
-python direct_server.py
+# Run Flask application with gunicorn
+gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app

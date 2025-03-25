@@ -52,7 +52,8 @@ class Job(db.Model):
     location = db.Column(db.String(100), nullable=False)
     salary = db.Column(db.String(100))
     job_type = db.Column(db.String(50))  # Full-time, Part-time, Contract, etc.
-    category = db.Column(db.String(50))  # white-collar, blue-collar, grey-collar
+    category = db.Column(db.String(50))  # technology, creative, professional, etc.
+    subcategory = db.Column(db.String(100))  # Software Development, Design, Accounting, etc.
     description = db.Column(db.Text, nullable=False)
     requirements = db.Column(db.Text)
     contact_email = db.Column(db.String(100))
@@ -75,6 +76,7 @@ class Job(db.Model):
             'salary': self.salary,
             'job_type': self.job_type,
             'category': self.category,
+            'subcategory': self.subcategory,
             'description': self.description,
             'requirements': self.requirements,
             'contact_email': self.contact_email,

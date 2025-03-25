@@ -7,6 +7,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
+# Job categories and subcategories
+JOB_CATEGORIES = {
+    "technology": ["Software Development", "IT & Networking", "Data Science", "DevOps", "Cybersecurity", "Product Management"],
+    "creative": ["Design", "Writing", "Marketing", "Video Production", "Animation", "Social Media"],
+    "professional": ["Accounting", "Legal", "HR", "Customer Service", "Sales", "Consulting"],
+    "healthcare": ["Telemedicine", "Medical Coding", "Health Coaching", "Mental Health", "Medical Writing"],
+    "education": ["Online Teaching", "Curriculum Development", "Educational Consulting", "Tutoring", "Course Creation"],
+    "skilled-trades": ["Remote Technician", "Project Management", "Quality Assurance", "Virtual Installation Support"]
+}
+
 # Sample data for jobs - replace with database in production
 JOBS = [
     {
@@ -14,7 +24,8 @@ JOBS = [
         "title": "Remote Software Engineer",
         "company": "TechCorp",
         "location": "Remote (Worldwide)",
-        "category": "white-collar",
+        "category": "technology",
+        "subcategory": "Software Development",
         "job_type": "Full-time",
         "salary": "$90,000 - $120,000",
         "description": "We're looking for an experienced software engineer to join our remote team.",
@@ -29,7 +40,8 @@ JOBS = [
         "title": "Remote Customer Support Specialist",
         "company": "SupportNow",
         "location": "Remote (US Only)",
-        "category": "grey-collar",
+        "category": "professional",
+        "subcategory": "Customer Service",
         "job_type": "Full-time",
         "salary": "$45,000 - $55,000",
         "description": "Join our customer support team and help clients solve their technical issues.",
@@ -44,7 +56,8 @@ JOBS = [
         "title": "Remote HVAC Technician Coordinator",
         "company": "CoolAir Systems",
         "location": "Remote with occasional travel",
-        "category": "blue-collar",
+        "category": "skilled-trades",
+        "subcategory": "Project Management",
         "job_type": "Contract",
         "salary": "$35 - $45 per hour",
         "description": "Coordinate with our team of field technicians to optimize service delivery.",
@@ -53,6 +66,38 @@ JOBS = [
         "posted_date": datetime.datetime(2025, 3, 15),
         "is_active": True,
         "views": 78
+    },
+    {
+        "id": 4,
+        "title": "Remote Graphic Designer",
+        "company": "DesignHub",
+        "location": "Remote (Worldwide)",
+        "category": "creative",
+        "subcategory": "Design",
+        "job_type": "Part-time",
+        "salary": "$30 - $50 per hour",
+        "description": "Create engaging visual content for our marketing campaigns and products.",
+        "requirements": "Proficiency in Adobe Creative Suite and 3+ years of design experience.",
+        "application_url": "https://example.com/apply",
+        "posted_date": datetime.datetime(2025, 3, 18),
+        "is_active": True,
+        "views": 156
+    },
+    {
+        "id": 5,
+        "title": "Online Math Tutor",
+        "company": "LearnOnline",
+        "location": "Remote (Worldwide)",
+        "category": "education",
+        "subcategory": "Tutoring",
+        "job_type": "Flexible",
+        "salary": "$25 - $40 per hour",
+        "description": "Teach mathematics to students of all levels through our virtual classroom platform.",
+        "requirements": "Degree in Mathematics or related field and previous teaching experience.",
+        "application_url": "https://example.com/apply",
+        "posted_date": datetime.datetime(2025, 3, 10),
+        "is_active": True,
+        "views": 93
     }
 ]
 
@@ -74,8 +119,35 @@ def index():
 
 @app.route('/jobs')
 def jobs():
-    """Job listings page"""
-    return render_template('jobs.html', jobs=JOBS)
+    """Job listings page with filters"""
+    # Get filter parameters
+    category = request.args.get('category', '')
+    subcategory = request.args.get('subcategory', '')
+    job_type = request.args.get('job_type', '')
+    location = request.args.get('location', '')
+    
+    # Filter jobs
+    filtered_jobs = JOBS
+    
+    if category:
+        filtered_jobs = [job for job in filtered_jobs if job.get('category') == category]
+    
+    if subcategory:
+        filtered_jobs = [job for job in filtered_jobs if job.get('subcategory') == subcategory]
+    
+    if job_type:
+        filtered_jobs = [job for job in filtered_jobs if job.get('job_type') == job_type]
+    
+    if location:
+        filtered_jobs = [job for job in filtered_jobs 
+                         if location.lower() in job.get('location', '').lower()]
+    
+    return render_template('jobs.html', 
+                          jobs=filtered_jobs, 
+                          category=category,
+                          subcategory=subcategory,
+                          job_type=job_type,
+                          location=location)
 
 @app.route('/jobs/<int:job_id>')
 def job_detail(job_id):
@@ -98,23 +170,33 @@ def post_job():
         return redirect(url_for('jobs'))
     return render_template('post_job.html')
 
-@app.route('/api/extract-job', methods=['POST'])
+@app.route('/extract-job', methods=['POST'])
 def extract_job():
     """Extract job details from URL (API endpoint)"""
-    url = request.json.get('url')
+    data = request.get_json() if request.is_json else None
+    
+    # Get URL from JSON body or fallback to form data
+    url = data.get('url') if data else request.form.get('url')
+    
     if not url:
-        return jsonify({"error": "URL is required"}), 400
+        return jsonify({"success": False, "error": "URL is required"}), 400
     
-    # Placeholder for job extraction logic
-    # In a real app, use web scraping to extract job details
-    job_details = {
-        "title": "Extracted Job Title",
-        "company": "Company Name",
-        "location": "Remote",
-        "description": "Job description would be extracted from the provided URL."
-    }
+    # Import web scraping function
+    from web_scraper import extract_job_details, is_valid_url
     
-    return jsonify({"success": True, "job": job_details})
+    if not is_valid_url(url):
+        return jsonify({"success": False, "error": "Invalid URL format"}), 400
+    
+    try:
+        # Extract job details from the URL
+        result = extract_job_details(url)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            "success": False, 
+            "error": f"Error extracting job details: {str(e)}",
+            "job": {}
+        }), 500
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -190,6 +272,40 @@ def admin_export_jobs():
         export_jobs.append(job_copy)
     
     return jsonify(export_jobs)
+
+@app.route('/admin/scrape-job', methods=['GET', 'POST'])
+def admin_scrape_job():
+    """Admin page for scraping jobs from URLs"""
+    if not session.get('admin_logged_in'):
+        flash('Please log in first', 'error')
+        return redirect(url_for('admin_login'))
+    
+    if request.method == 'POST':
+        url = request.form.get('job_url')
+        if not url:
+            flash('URL is required', 'error')
+            return redirect(url_for('admin_scrape_job'))
+            
+        # Import web scraping function
+        from web_scraper import extract_job_details, is_valid_url
+        
+        if not is_valid_url(url):
+            flash('Invalid URL format', 'error')
+            return redirect(url_for('admin_scrape_job'))
+        
+        try:
+            # Extract job details from the URL
+            job_details = extract_job_details(url)
+            if job_details.get('success'):
+                flash('Job details extracted successfully!', 'success')
+                # Process the job data (in a real app, save to database)
+                # For now, we're just redirecting back with a success message
+            else:
+                flash(f'Error: {job_details.get("error", "Unknown error")}', 'error')
+        except Exception as e:
+            flash(f'Error extracting job details: {str(e)}', 'error')
+    
+    return render_template('admin/scrape_job.html')
 
 @app.route('/text-extractor')
 def text_extractor():

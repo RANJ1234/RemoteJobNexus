@@ -1,239 +1,274 @@
 {% extends 'admin/base.html' %}
 
-{% block title %}Extract Job Details - Admin Dashboard{% endblock %}
-{% block header_title %}Job Extraction Tool{% endblock %}
+{% block title %}Scrape Jobs - Remote Work Admin{% endblock %}
 
 {% block content %}
-<div class="content-card">
-    <h5 class="mb-4">Extract Job Details from URL</h5>
-    
-    <div class="row">
-        <div class="col-md-6">
-            <form id="jobExtractForm">
-                <div class="mb-3">
-                    <label for="jobUrl" class="form-label">Job Posting URL</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-link"></i></span>
-                        <input type="url" class="form-control" id="jobUrl" name="url" 
-                               placeholder="https://example.com/job-posting" required>
-                        <button class="btn btn-primary" type="submit" id="extractBtn">
-                            <i class="fas fa-search me-1"></i> Extract
-                        </button>
-                    </div>
-                    <div class="form-text">Enter the URL of a job posting to extract its details.</div>
-                </div>
-            </form>
-            
-            <div id="extractionStatus" class="alert d-none my-3"></div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h6 class="card-title"><i class="fas fa-info-circle me-2"></i>How It Works</h6>
-                    <p class="card-text">This tool attempts to automatically extract job details from various job posting websites.</p>
-                    <ul class="mb-0">
-                        <li>The extracted information may not be 100% accurate</li>
-                        <li>Review and edit the results before saving</li>
-                        <li>Works best with popular job boards and company career pages</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Job Form (initially hidden) -->
-    <div id="jobFormContainer" class="mt-4 d-none">
-        <h5 class="mb-3">Job Details</h5>
-        <p class="text-muted mb-4">Review and edit the extracted information before saving.</p>
-        
-        <form id="jobSaveForm" action="{{ url_for('post_job') }}" method="post">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Job Title *</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="company" class="form-label">Company *</label>
-                        <input type="text" class="form-control" id="company" name="company" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="location" class="form-label">Location *</label>
-                        <input type="text" class="form-control" id="location" name="location" required>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="category" class="form-label">Job Category</label>
-                        <select class="form-select" id="category" name="category">
-                            <option value="">-- Select Category --</option>
-                            <option value="white-collar">White Collar</option>
-                            <option value="blue-collar">Blue Collar</option>
-                            <option value="grey-collar">Grey Collar</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="job_type" class="form-label">Job Type</label>
-                        <select class="form-select" id="job_type" name="job_type">
-                            <option value="">-- Select Type --</option>
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
-                            <option value="Contract">Contract</option>
-                            <option value="Temporary">Temporary</option>
-                            <option value="Freelance">Freelance</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="salary" class="form-label">Salary Range</label>
-                        <input type="text" class="form-control" id="salary" name="salary" 
-                               placeholder="e.g. $50,000 - $70,000 per year">
-                    </div>
-                </div>
-                
-                <div class="col-12">
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Job Description *</label>
-                        <textarea class="form-control" id="description" name="description" rows="6" required></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="requirements" class="form-label">Requirements</label>
-                        <textarea class="form-control" id="requirements" name="requirements" rows="4"></textarea>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="application_url" class="form-label">Application URL</label>
-                        <input type="url" class="form-control" id="application_url" name="application_url">
-                        <input type="hidden" id="source_url" name="source_url">
-                    </div>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="button" class="btn btn-outline-secondary" id="resetBtn">
-                            <i class="fas fa-undo me-1"></i> Reset
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Save Job
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Scrape Jobs</h1>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn" style="background-color: transparent; color: var(--primary-color);">
+        &larr; Back to Dashboard
+    </a>
 </div>
-{% endblock %}
 
-{% block scripts %}
+<div class="card" style="margin: 2rem 0; padding: 2rem;">
+    <div style="display: flex; align-items: center; margin-bottom: 2rem;">
+        <div style="margin-right: 2rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+        </div>
+        <div>
+            <h2>Extract Job Details from URL</h2>
+            <p>Paste a job posting URL to automatically extract job details. Our system will attempt to parse information from common job posting sites.</p>
+        </div>
+    </div>
+    
+    <form id="scrape-job-form" method="POST" action="{{ url_for('admin_scrape_job') }}">
+        <div class="form-group">
+            <label for="job_url">Job Posting URL</label>
+            <input type="url" id="job_url" name="job_url" class="form-control" placeholder="https://example.com/job-posting" required>
+        </div>
+        
+        <div id="extraction-status" style="margin: 1rem 0; padding: 1rem; border-radius: 4px; display: none;"></div>
+        
+        <button type="submit" class="btn btn-accent">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            Extract Job Details
+        </button>
+    </form>
+</div>
+
+<div class="card" style="margin: 2rem 0; padding: 2rem;">
+    <h2>Job Details Preview</h2>
+    <p>Once a job is extracted, preview the details below before saving to the database.</p>
+    
+    <div id="job-preview" style="margin-top: 1.5rem;">
+        <p class="text-muted">No job details to preview yet. Extract a job to see the preview here.</p>
+    </div>
+    
+    <form id="save-job-form" method="POST" action="{{ url_for('post_job') }}" style="margin-top: 1.5rem; display: none;">
+        <input type="hidden" id="title" name="title">
+        <input type="hidden" id="company" name="company">
+        <input type="hidden" id="location" name="location">
+        <input type="hidden" id="job_type" name="job_type">
+        <input type="hidden" id="category" name="category">
+        <input type="hidden" id="subcategory" name="subcategory">
+        <input type="hidden" id="salary" name="salary">
+        <input type="hidden" id="description" name="description">
+        <input type="hidden" id="requirements" name="requirements">
+        <input type="hidden" id="contact_email" name="contact_email">
+        <input type="hidden" id="application_url" name="application_url">
+        <input type="hidden" id="source_url" name="source_url">
+        
+        <button type="submit" class="btn btn-accent">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem;">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Save Job to Database
+        </button>
+    </form>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const extractForm = document.getElementById('jobExtractForm');
-    const jobUrl = document.getElementById('jobUrl');
-    const extractBtn = document.getElementById('extractBtn');
-    const extractionStatus = document.getElementById('extractionStatus');
-    const jobFormContainer = document.getElementById('jobFormContainer');
-    const resetBtn = document.getElementById('resetBtn');
+    const scrapeForm = document.getElementById('scrape-job-form');
+    const saveForm = document.getElementById('save-job-form');
+    const statusEl = document.getElementById('extraction-status');
+    const previewEl = document.getElementById('job-preview');
     
-    // Form fields
-    const title = document.getElementById('title');
-    const company = document.getElementById('company');
-    const location = document.getElementById('location');
-    const category = document.getElementById('category');
-    const jobType = document.getElementById('job_type');
-    const salary = document.getElementById('salary');
-    const description = document.getElementById('description');
-    const requirements = document.getElementById('requirements');
-    const applicationUrl = document.getElementById('application_url');
-    const sourceUrl = document.getElementById('source_url');
-    
-    extractForm.addEventListener('submit', function(e) {
+    scrapeForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        if (!jobUrl.value) {
-            showExtractionStatus('danger', 'Please enter a valid job posting URL');
+        const jobUrl = document.getElementById('job_url').value;
+        if (!isValidURL(jobUrl)) {
+            showStatus('error', 'Please enter a valid URL');
             return;
         }
         
-        // Disable button and show loading
-        extractBtn.disabled = true;
-        extractBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Extracting...';
-        showExtractionStatus('info', 'Extracting job details. This may take a few moments...');
+        showStatus('info', 'Extracting job details, please wait...');
         
-        // Make the API call
-        fetch('/extract-job', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'url=' + encodeURIComponent(jobUrl.value)
-        })
-        .then(response => response.json())
-        .then(data => {
-            extractBtn.disabled = false;
-            extractBtn.innerHTML = '<i class="fas fa-search me-1"></i> Extract';
+        try {
+            const response = await fetch('/extract-job', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: jobUrl })
+            });
             
-            if (data.error) {
-                showExtractionStatus('danger', 'Error: ' + data.error);
-                return;
-            }
+            const data = await response.json();
             
-            // Populate the form
-            populateForm(data);
-            showExtractionStatus('success', 'Job details extracted successfully. Please review and edit before saving.');
-            jobFormContainer.classList.remove('d-none');
-        })
-        .catch(error => {
-            extractBtn.disabled = false;
-            extractBtn.innerHTML = '<i class="fas fa-search me-1"></i> Extract';
-            showExtractionStatus('danger', 'Error: ' + error.message);
-        });
-    });
-    
-    resetBtn.addEventListener('click', function() {
-        extractForm.reset();
-        document.getElementById('jobSaveForm').reset();
-        jobFormContainer.classList.add('d-none');
-        extractionStatus.classList.add('d-none');
-    });
-    
-    function populateForm(data) {
-        title.value = data.title || '';
-        company.value = data.company || '';
-        location.value = data.location || '';
-        category.value = data.category || '';
-        jobType.value = data.job_type || '';
-        salary.value = data.salary || '';
-        description.value = data.description || '';
-        requirements.value = data.requirements || '';
-        applicationUrl.value = data.application_url || '';
-        sourceUrl.value = data.source_url || '';
-        
-        // Highlight populated fields
-        highlightPopulatedFields();
-    }
-    
-    function showExtractionStatus(type, message) {
-        extractionStatus.textContent = message;
-        extractionStatus.className = `alert alert-${type}`;
-        extractionStatus.classList.remove('d-none');
-    }
-    
-    function highlightPopulatedFields() {
-        const formFields = [title, company, location, category, jobType, 
-                           salary, description, requirements, applicationUrl];
-        
-        formFields.forEach(field => {
-            if (field.value) {
-                field.classList.add('is-valid');
+            if (data.success) {
+                showStatus('success', 'Job details extracted successfully!');
+                displayJobPreview(data.job);
+                populateForm(data.job);
+                saveForm.style.display = 'block';
             } else {
-                field.classList.remove('is-valid');
+                showStatus('error', data.error || 'Failed to extract job details');
             }
-        });
+        } catch (error) {
+            showStatus('error', 'An error occurred while extracting job details');
+            console.error(error);
+        }
+    });
+    
+    function isValidURL(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    function showStatus(type, message) {
+        statusEl.style.display = 'block';
+        statusEl.textContent = message;
+        
+        statusEl.classList.remove('bg-info', 'bg-success', 'bg-danger');
+        
+        if (type === 'info') {
+            statusEl.style.backgroundColor = 'rgba(74, 108, 247, 0.1)';
+            statusEl.style.color = '#4a6cf7';
+        } else if (type === 'success') {
+            statusEl.style.backgroundColor = 'rgba(46, 204, 113, 0.1)';
+            statusEl.style.color = '#2ecc71';
+        } else if (type === 'error') {
+            statusEl.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+            statusEl.style.color = '#e74c3c';
+        }
+    }
+    
+    function displayJobPreview(job) {
+        previewEl.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <h3 style="margin-bottom: 0.5rem;">${job.title || 'No Title'}</h3>
+                    <p><strong>${job.company || 'Unknown Company'}</strong> &bull; ${job.location || 'Remote'}</p>
+                    
+                    <div style="display: flex; gap: 0.5rem; margin: 0.5rem 0;">
+                        ${job.category ? `<span class="badge" style="background-color: #3498db;">${job.category}</span>` : ''}
+                        ${job.subcategory ? `<span class="badge" style="background-color: #2ecc71;">${job.subcategory}</span>` : ''}
+                        ${job.job_type ? `<span class="badge" style="background-color: #9b59b6;">${job.job_type}</span>` : ''}
+                    </div>
+                    
+                    ${job.salary ? `<p><strong>Salary:</strong> ${job.salary}</p>` : ''}
+                </div>
+                
+                <div>
+                    <h4>Description</h4>
+                    <div style="max-height: 200px; overflow-y: auto; padding: 1rem; background-color: var(--light-bg); border-radius: 4px;">
+                        ${job.description || 'No description available'}
+                    </div>
+                </div>
+                
+                ${job.requirements ? `
+                <div>
+                    <h4>Requirements</h4>
+                    <div style="max-height: 200px; overflow-y: auto; padding: 1rem; background-color: var(--light-bg); border-radius: 4px;">
+                        ${job.requirements}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div>
+                    <p><strong>Source URL:</strong> <a href="${job.source_url || '#'}" target="_blank">${job.source_url || 'N/A'}</a></p>
+                    ${job.application_url ? `<p><strong>Application URL:</strong> <a href="${job.application_url}" target="_blank">${job.application_url}</a></p>` : ''}
+                    ${job.contact_email ? `<p><strong>Contact Email:</strong> ${job.contact_email}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    function populateForm(job) {
+        document.getElementById('title').value = job.title || '';
+        document.getElementById('company').value = job.company || '';
+        document.getElementById('location').value = job.location || '';
+        document.getElementById('job_type').value = job.job_type || '';
+        document.getElementById('category').value = job.category || '';
+        document.getElementById('subcategory').value = job.subcategory || '';
+        document.getElementById('salary').value = job.salary || '';
+        document.getElementById('description').value = job.description || '';
+        document.getElementById('requirements').value = job.requirements || '';
+        document.getElementById('contact_email').value = job.contact_email || '';
+        document.getElementById('application_url').value = job.application_url || '';
+        document.getElementById('source_url').value = job.source_url || '';
     }
 });
 </script>
+
+<style>
+.badge {
+    display: inline-block;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.bg-info {
+    background-color: rgba(74, 108, 247, 0.1);
+    color: #4a6cf7;
+}
+
+.bg-success {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.bg-danger {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.text-muted {
+    color: #777;
+    font-style: italic;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.btn-accent {
+    display: inline-flex;
+    align-items: center;
+    background-color: #4a6cf7;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn-accent:hover {
+    background-color: #3451d1;
+    transform: translateY(-2px);
+}
+</style>
 {% endblock %}

@@ -1,9 +1,4 @@
 import re
-import urllib.parse
-import requests
-from bs4 import BeautifulSoup
-
-import re
 import requests
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
@@ -26,20 +21,26 @@ def extract_job_details(url):
         url: The job posting URL
         
     Returns:
-        Dictionary with job details
+        Dictionary with job details and success status
     """
-    # Default empty job details
-    job_details = {
-        'title': '',
-        'company': '',
-        'location': '',
-        'job_type': '',
-        'category': '',
-        'salary': '',
-        'description': '',
-        'requirements': '',
-        'application_url': url,
-        'source_url': url
+    # Response object format
+    response_data = {
+        'success': False,
+        'job': {
+            'title': '',
+            'company': '',
+            'location': 'Remote',
+            'job_type': '',
+            'category': '',
+            'subcategory': '',
+            'salary': '',
+            'description': '',
+            'requirements': '',
+            'application_url': url,
+            'source_url': url,
+            'contact_email': ''
+        },
+        'error': None
     }
     
     try:
@@ -48,7 +49,8 @@ def extract_job_details(url):
         response = requests.get(url, headers=headers, timeout=10)
         
         if response.status_code != 200:
-            return job_details
+            response_data['error'] = f"Failed to fetch URL, status code: {response.status_code}"
+            return response_data
         
         # Parse HTML with BeautifulSoup
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -58,14 +60,14 @@ def extract_job_details(url):
             title = soup.title.get_text().strip()
             # Clean up common patterns in titles
             title = re.sub(r'\s*[\|\-–—]\s*.*$', '', title)
-            job_details['title'] = title
+            response_data['job']['title'] = title
         
         # Try to find common job posting elements
         job_container = None
         
         # Look for common job posting containers
         for selector in ['#job-description', '.job-description', '.job-posting', 
-                       '.job-details', '#job-details', 'article.job']:
+                        '.job-details', '#job-details', 'article.job']:
             container = soup.select_one(selector)
             if container:
                 job_container = container
@@ -83,63 +85,155 @@ def extract_job_details(url):
             company_pattern = r'Company:?\s*([A-Za-z0-9\s&\.,]+?)(?:\n|\.|$)|at\s+([A-Za-z0-9\s&\.,]+?)(?:\n|\.|$)'
             company_match = re.search(company_pattern, content)
             if company_match:
-                job_details['company'] = (company_match.group(1) or company_match.group(2)).strip()
+                response_data['job']['company'] = (company_match.group(1) or company_match.group(2)).strip()
             else:
                 # Try to get company from domain
-                parsed_url = urllib.parse.urlparse(url)
-                domain = parsed_url.netloc
+                domain = urlparse(url).netloc
                 domain_parts = domain.split('.')
                 if len(domain_parts) > 1:
-                    job_details['company'] = domain_parts[-2].capitalize()
+                    response_data['job']['company'] = domain_parts[-2].capitalize()
             
             # Try to extract location
             location_pattern = r'Location:?\s*([A-Za-z0-9\s\.,]+?)(?:\n|\.|$)|in\s+([A-Za-z0-9\s\.,]+?)(?:\n|\.|$)'
             location_match = re.search(location_pattern, content)
             if location_match:
-                job_details['location'] = (location_match.group(1) or location_match.group(2)).strip()
+                response_data['job']['location'] = (location_match.group(1) or location_match.group(2)).strip()
             
             # Try to extract job type
             job_type_pattern = r'(Full[ -]Time|Part[ -]Time|Contract|Temporary|Freelance)'
             job_type_match = re.search(job_type_pattern, content, re.IGNORECASE)
             if job_type_match:
-                job_details['job_type'] = job_type_match.group(1).strip()
+                response_data['job']['job_type'] = job_type_match.group(1).strip()
             
             # Try to extract salary
             salary_pattern = r'Salary:?\s*([$€£]?[\d,.]+\s*[-–]\s*[$€£]?[\d,.]+\s*(?:per|\/|\s)?(?:year|yr|month|annum|hour|hr))'
             salary_match = re.search(salary_pattern, content, re.IGNORECASE)
             if salary_match:
-                job_details['salary'] = salary_match.group(1).strip()
+                response_data['job']['salary'] = salary_match.group(1).strip()
             
-            # Guess job category based on keywords
-            white_collar_keywords = ['manager', 'executive', 'director', 'analyst', 'consultant']
-            blue_collar_keywords = ['worker', 'technician', 'mechanic', 'operator', 'driver']
-            grey_collar_keywords = ['healthcare', 'nurse', 'teacher', 'professor', 'chef']
+            # Try to extract email
+            email_pattern = r'([\w\.-]+@[\w\.-]+\.\w+)'
+            email_match = re.search(email_pattern, content)
+            if email_match:
+                response_data['job']['contact_email'] = email_match.group(1).strip()
             
-            # Simple keyword matching
-            if any(keyword in content.lower() for keyword in white_collar_keywords):
-                job_details['category'] = 'white-collar'
-            elif any(keyword in content.lower() for keyword in blue_collar_keywords):
-                job_details['category'] = 'blue-collar'
-            elif any(keyword in content.lower() for keyword in grey_collar_keywords):
-                job_details['category'] = 'grey-collar'
+            # Guess job category and subcategory based on keywords
+            categories = {
+                'technology': ['developer', 'engineer', 'software', 'data', 'IT', 'web', 'cloud', 'devops', 'security', 'cyber'],
+                'creative': ['designer', 'writer', 'marketing', 'content', 'media', 'graphic', 'video', 'photography', 'social'],
+                'professional': ['manager', 'executive', 'director', 'analyst', 'consultant', 'sales', 'legal', 'accounting'],
+                'healthcare': ['health', 'medical', 'nurse', 'doctor', 'therapist', 'clinical', 'patient'],
+                'education': ['teacher', 'professor', 'instructor', 'tutor', 'curriculum', 'education'],
+                'skilled-trades': ['technician', 'mechanic', 'electrician', 'plumber', 'carpenter', 'maintenance']
+            }
+            
+            # Subcategories mapping
+            subcategories = {
+                'technology': {
+                    'software': 'Software Development',
+                    'data': 'Data Science',
+                    'web': 'Software Development',
+                    'network': 'IT & Networking',
+                    'cloud': 'DevOps',
+                    'security': 'Cybersecurity',
+                    'cyber': 'Cybersecurity',
+                    'product': 'Product Management',
+                    'devops': 'DevOps'
+                },
+                'creative': {
+                    'design': 'Design',
+                    'graphic': 'Design',
+                    'ui': 'Design',
+                    'ux': 'Design',
+                    'content': 'Writing',
+                    'write': 'Writing',
+                    'market': 'Marketing',
+                    'video': 'Video Production',
+                    'anim': 'Animation',
+                    'social': 'Social Media'
+                },
+                'professional': {
+                    'account': 'Accounting',
+                    'finance': 'Accounting',
+                    'legal': 'Legal',
+                    'hr': 'HR',
+                    'human resource': 'HR',
+                    'service': 'Customer Service',
+                    'sales': 'Sales',
+                    'consult': 'Consulting'
+                },
+                'healthcare': {
+                    'tele': 'Telemedicine',
+                    'code': 'Medical Coding',
+                    'coach': 'Health Coaching',
+                    'mental': 'Mental Health',
+                    'psych': 'Mental Health',
+                    'write': 'Medical Writing'
+                },
+                'education': {
+                    'teach': 'Online Teaching',
+                    'curriculum': 'Curriculum Development',
+                    'consult': 'Educational Consulting',
+                    'tutor': 'Tutoring',
+                    'course': 'Course Creation'
+                },
+                'skilled-trades': {
+                    'tech': 'Remote Technician',
+                    'project': 'Project Management',
+                    'quality': 'Quality Assurance',
+                    'qa': 'Quality Assurance',
+                    'install': 'Virtual Installation Support'
+                }
+            }
+            
+            # Find best matching category
+            best_category = None
+            max_matches = 0
+            
+            for category, keywords in categories.items():
+                matches = sum(1 for keyword in keywords if keyword.lower() in content.lower())
+                if matches > max_matches:
+                    max_matches = matches
+                    best_category = category
+            
+            if best_category:
+                response_data['job']['category'] = best_category
+                
+                # Find best matching subcategory
+                best_subcategory = None
+                max_sub_matches = 0
+                
+                for keyword, subcategory in subcategories[best_category].items():
+                    if keyword.lower() in content.lower():
+                        matches = content.lower().count(keyword.lower())
+                        if matches > max_sub_matches:
+                            max_sub_matches = matches
+                            best_subcategory = subcategory
+                
+                if best_subcategory:
+                    response_data['job']['subcategory'] = best_subcategory
             
             # Extract requirements if found
             req_section = re.search(r'Requirements:?\s*([\s\S]+?)(?:Responsibilities|Benefits|About Us|Apply Now|$)', 
                                   content, re.IGNORECASE)
             if req_section:
-                job_details['requirements'] = req_section.group(1).strip()
+                response_data['job']['requirements'] = req_section.group(1).strip()
                 # Use the content before requirements as description
                 req_start = content.find(req_section.group(0))
                 if req_start > 100:
-                    job_details['description'] = content[:req_start].strip()
+                    response_data['job']['description'] = content[:req_start].strip()
                 else:
-                    job_details['description'] = content
+                    response_data['job']['description'] = content
             else:
                 # No clear requirements section found
-                job_details['description'] = content
+                response_data['job']['description'] = content
+        
+        # Set success to true if we at least got a title and description
+        if response_data['job']['title'] and response_data['job']['description']:
+            response_data['success'] = True
     
     except Exception as e:
-        # If anything fails, return what we've got so far
-        job_details['description'] = f"Error extracting job details: {str(e)}"
+        # If anything fails, capture the error
+        response_data['error'] = f"Error extracting job details: {str(e)}"
     
-    return job_details
+    return response_data

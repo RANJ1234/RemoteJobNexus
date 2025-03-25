@@ -325,7 +325,7 @@
             <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
                 <div style="flex: 1; min-width: 200px; margin-bottom: 1.5rem;">
                     <h3>Remote<span style="color: var(--accent-color);">Work</span></h3>
-                    <p>Find the best remote jobs in blue-collar, white-collar, and grey-collar sectors.</p>
+                    <p>Find the best remote jobs across technology, creative, professional, healthcare, education, and skilled trades sectors.</p>
                 </div>
                 
                 <div style="flex: 1; min-width: 200px; margin-bottom: 1.5rem;">
@@ -340,9 +340,10 @@
                 <div style="flex: 1; min-width: 200px; margin-bottom: 1.5rem;">
                     <h4>Categories</h4>
                     <ul style="list-style: none; margin-top: 0.5rem;">
-                        <li><a href="{{ url_for('jobs', category='white-collar') }}" style="color: white; text-decoration: none;">White-Collar Jobs</a></li>
-                        <li><a href="{{ url_for('jobs', category='blue-collar') }}" style="color: white; text-decoration: none;">Blue-Collar Jobs</a></li>
-                        <li><a href="{{ url_for('jobs', category='grey-collar') }}" style="color: white; text-decoration: none;">Grey-Collar Jobs</a></li>
+                        <li><a href="{{ url_for('jobs', category='technology') }}" style="color: white; text-decoration: none;">Technology</a></li>
+                        <li><a href="{{ url_for('jobs', category='creative') }}" style="color: white; text-decoration: none;">Creative</a></li>
+                        <li><a href="{{ url_for('jobs', category='professional') }}" style="color: white; text-decoration: none;">Professional</a></li>
+                        <li><a href="{{ url_for('jobs', category='healthcare') }}" style="color: white; text-decoration: none;">Healthcare</a></li>
                     </ul>
                 </div>
             </div>
@@ -385,6 +386,9 @@
             });
         });
     </script>
+    
+    <!-- Categories.js - Contains job category data and functions -->
+    <script src="{{ url_for('static', filename='js/categories.js') }}"></script>
     
     {% block scripts %}{% endblock %}
 </body>

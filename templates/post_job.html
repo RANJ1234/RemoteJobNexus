@@ -36,13 +36,23 @@
             
             <div class="form-group" style="flex: 1;">
                 <label for="category">Category</label>
-                <select id="category" name="category">
+                <select id="category" name="category" onchange="updateSubcategories()">
                     <option value="">Select Category</option>
-                    <option value="white-collar">White-Collar</option>
-                    <option value="blue-collar">Blue-Collar</option>
-                    <option value="grey-collar">Grey-Collar</option>
+                    <option value="technology">Technology</option>
+                    <option value="creative">Creative</option>
+                    <option value="professional">Professional</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="education">Education</option>
+                    <option value="skilled-trades">Skilled Trades</option>
                 </select>
             </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="subcategory">Subcategory</label>
+            <select id="subcategory" name="subcategory">
+                <option value="">Select a category first</option>
+            </select>
         </div>
         
         <div class="form-group">
@@ -86,10 +96,54 @@
 </div>
 
 <script>
+    // Job categories and subcategories
+    const JOB_CATEGORIES = {
+        "technology": ["Software Development", "IT & Networking", "Data Science", "DevOps", "Cybersecurity", "Product Management"],
+        "creative": ["Design", "Writing", "Marketing", "Video Production", "Animation", "Social Media"],
+        "professional": ["Accounting", "Legal", "HR", "Customer Service", "Sales", "Consulting"],
+        "healthcare": ["Telemedicine", "Medical Coding", "Health Coaching", "Mental Health", "Medical Writing"],
+        "education": ["Online Teaching", "Curriculum Development", "Educational Consulting", "Tutoring", "Course Creation"],
+        "skilled-trades": ["Remote Technician", "Project Management", "Quality Assurance", "Virtual Installation Support"]
+    };
+
+    function updateSubcategories() {
+        const categorySelect = document.getElementById('category');
+        const subcategorySelect = document.getElementById('subcategory');
+        
+        // Clear existing options
+        subcategorySelect.innerHTML = '';
+        
+        // Add default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select a subcategory';
+        subcategorySelect.appendChild(defaultOption);
+        
+        // Get selected category
+        const selectedCategory = categorySelect.value;
+        
+        if (selectedCategory && JOB_CATEGORIES[selectedCategory]) {
+            // Add subcategories for the selected category
+            JOB_CATEGORIES[selectedCategory].forEach(subcategory => {
+                const option = document.createElement('option');
+                option.value = subcategory;
+                option.textContent = subcategory;
+                subcategorySelect.appendChild(option);
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const extractBtn = document.getElementById('extract_btn');
         const jobUrlInput = document.getElementById('job_url');
         const statusDiv = document.getElementById('extraction_status');
+        const categorySelect = document.getElementById('category');
+        
+        // Add event listener for category change
+        categorySelect.addEventListener('change', updateSubcategories);
+        
+        // Initialize subcategories
+        updateSubcategories();
         
         extractBtn.addEventListener('click', function() {
             const url = jobUrlInput.value.trim();
@@ -119,6 +173,11 @@
                 if (data.company) document.getElementById('company').value = data.company;
                 if (data.location) document.getElementById('location').value = data.location;
                 if (data.description) document.getElementById('description').value = data.description;
+                if (data.requirements) document.getElementById('requirements').value = data.requirements;
+                if (data.salary) document.getElementById('salary').value = data.salary;
+                if (data.application_url) document.getElementById('application_url').value = data.application_url;
+                
+                // Handle job type
                 if (data.job_type) {
                     const select = document.getElementById('job_type');
                     for (let i = 0; i < select.options.length; i++) {
@@ -127,6 +186,32 @@
                             break;
                         }
                     }
+                }
+                
+                // Handle category
+                if (data.category) {
+                    const categorySelect = document.getElementById('category');
+                    for (let i = 0; i < categorySelect.options.length; i++) {
+                        if (categorySelect.options[i].value === data.category) {
+                            categorySelect.selectedIndex = i;
+                            // Update subcategories based on selected category
+                            updateSubcategories();
+                            break;
+                        }
+                    }
+                    
+                    // Handle subcategory after updating options
+                    setTimeout(() => {
+                        if (data.subcategory) {
+                            const subcategorySelect = document.getElementById('subcategory');
+                            for (let i = 0; i < subcategorySelect.options.length; i++) {
+                                if (subcategorySelect.options[i].text === data.subcategory) {
+                                    subcategorySelect.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                    }, 100); // Small delay to ensure the subcategory options are updated
                 }
                 
                 showStatus('Job details extracted successfully!', 'success');

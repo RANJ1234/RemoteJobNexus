@@ -10,10 +10,84 @@
     </a>
 </div>
 
-<div style="margin: 2rem 0;">
-    <a href="{{ url_for('post_job') }}" class="btn btn-accent">Add New Job</a>
-    <a href="{{ url_for('admin_export_jobs') }}" class="btn" target="_blank">Export Jobs</a>
+<div style="margin: 2rem 0; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{{ url_for('post_job') }}" class="btn btn-accent admin-action-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Add New Job
+    </a>
+    
+    <a href="{{ url_for('admin_export_jobs') }}" class="btn admin-action-btn" target="_blank">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export Jobs
+    </a>
+    
+    <a href="{{ url_for('admin_scrape_job') }}" class="btn admin-action-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        Scrape Jobs
+    </a>
 </div>
+
+<style>
+    .admin-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .admin-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn.btn-accent {
+        background-color: #4a6cf7;
+    }
+    
+    /* Category badges styling */
+    .category-badges {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.3rem 0.5rem;
+        border-radius: 4px;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .category-badge {
+        text-transform: capitalize;
+    }
+    
+    .subcategory-badge {
+        background-color: rgba(46, 204, 113, 0.8);
+        font-size: 0.7rem;
+    }
+    
+    /* Add hover effect to table rows */
+    tbody tr {
+        transition: background-color 0.2s ease;
+    }
+    
+    tbody tr:hover {
+        background-color: rgba(74, 108, 247, 0.05);
+    }
+</style>
 
 <div class="card">
     <table style="width: 100%; border-collapse: collapse;">
@@ -23,6 +97,7 @@
                 <th style="padding: 1rem; text-align: left;">Title</th>
                 <th style="padding: 1rem; text-align: left;">Company</th>
                 <th style="padding: 1rem; text-align: left;">Location</th>
+                <th style="padding: 1rem; text-align: left;">Category</th>
                 <th style="padding: 1rem; text-align: left;">Posted Date</th>
                 <th style="padding: 1rem; text-align: left;">Status</th>
                 <th style="padding: 1rem; text-align: left;">Views</th>
@@ -37,6 +112,28 @@
                         <td style="padding: 0.8rem;">{{ job.title }}</td>
                         <td style="padding: 0.8rem;">{{ job.company }}</td>
                         <td style="padding: 0.8rem;">{{ job.location }}</td>
+                        <td style="padding: 0.8rem;">
+                            {% if job.category %}
+                                {% set colors = {
+                                    'technology': '#3498db',
+                                    'creative': '#e74c3c',
+                                    'professional': '#9b59b6',
+                                    'healthcare': '#2ecc71',
+                                    'education': '#f39c12',
+                                    'skilled-trades': '#1abc9c'
+                                } %}
+                                <div class="category-badges">
+                                    <span class="badge category-badge" style="background-color: {{ colors.get(job.category, '#3498db') }};">
+                                        {{ job.category|capitalize }}
+                                    </span>
+                                    {% if job.subcategory %}
+                                        <span class="badge subcategory-badge">
+                                            {{ job.subcategory }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </td>
                         <td style="padding: 0.8rem;">{{ job.posted_date }}</td>
                         <td style="padding: 0.8rem;">
                             {% if job.is_active %}
