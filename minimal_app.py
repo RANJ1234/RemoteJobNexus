@@ -1,9 +1,9 @@
 """
-Main entry point for the Remote Work Job Board application.
-This version is extremely optimized for faster startup in the Replit environment.
+Minimal Flask application that loads quickly and responds to health checks.
 """
 import os
 import logging
+import threading
 
 from flask import Flask, jsonify, render_template_string
 
@@ -15,15 +15,22 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
-# Routes
+# Create a flag to track when the database is ready
+db_ready = False
+
+# Set up routes
 @app.route('/health')
 def health():
     """Health check endpoint"""
-    return jsonify({"status": "ok"}), 200
+    global db_ready
+    status = "ok" if db_ready else "initializing"
+    return jsonify({"status": status}), 200
 
 @app.route('/')
 def index():
     """Simple homepage that loads without database dependencies"""
+    global db_ready
+    
     html = """
     <!DOCTYPE html>
     <html>
@@ -87,22 +94,74 @@ def index():
         <body>
             <div class="container">
                 <h1>Remote Work Job Board</h1>
-                <div class="loading"></div>
-                <p>Welcome to the Remote Work Job Board! The application is starting up.</p>
-                <p>Please wait a moment while we initialize the job database...</p>
+                <div class="loading" id="loading-spinner"></div>
+                <p id="status-message">Welcome to the Remote Work Job Board!</p>
+                <p>The application is starting up. Please wait a moment...</p>
                 <a href="/health" class="btn">Check Health</a>
                 
                 <script>
-                    // Auto-refresh the page after 10 seconds
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 10000);
+                    // Check the database status every 2 seconds
+                    const checkStatus = async () => {
+                        try {
+                            const response = await fetch('/health');
+                            const data = await response.json();
+                            
+                            if (data.status === 'ok') {
+                                // Database is ready, redirect to full application
+                                document.getElementById('status-message').textContent = 'Database initialized! Redirecting...';
+                                document.getElementById('loading-spinner').style.borderTopColor = '#4CAF50';
+                                setTimeout(() => {
+                                    window.location.href = '/';
+                                }, 2000);
+                            } else {
+                                // Check again in 2 seconds
+                                setTimeout(checkStatus, 2000);
+                            }
+                        } catch (error) {
+                            console.error('Error checking status:', error);
+                            setTimeout(checkStatus, 5000);
+                        }
+                    };
+                    
+                    // Start checking status
+                    checkStatus();
                 </script>
             </div>
         </body>
     </html>
     """
     return render_template_string(html)
+
+def start_background_loading():
+    """Start loading database and models in the background"""
+    global db_ready
+    
+    try:
+        # Import the delayed loader
+        from delayed_loader import start_delayed_loading
+        
+        # Start the delayed loading process
+        thread = start_delayed_loading(app)
+        
+        # Set a callback to update our db_ready flag when the thread completes
+        def check_thread():
+            thread.join(timeout=0.1)
+            global db_ready
+            if not thread.is_alive():
+                db_ready = True
+                logger.info("Database initialization complete")
+            else:
+                # Check again in 1 second
+                threading.Timer(1.0, check_thread).start()
+        
+        # Start checking the thread status
+        threading.Timer(1.0, check_thread).start()
+        
+    except Exception as e:
+        logger.error(f"Error starting background loading: {e}")
+
+# Start the background loading process when the app starts
+start_background_loading()
 
 # For direct execution
 if __name__ == '__main__':
