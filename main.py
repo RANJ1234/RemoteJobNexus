@@ -1,12 +1,24 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, session
 import os
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash, session
+from dotenv import load_dotenv
 import datetime
 import json
 import logging
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Set up logging for easier debugging
+# Load environment variables from .env file
+load_dotenv()
+
+# Set up logging
 logging.basicConfig(level=logging.DEBUG)
+
+# Import models so that variables like Job and UserAccount are globally available
+try:
+    from models import UserAccount, Job, BlogPost, WebsiteContent, SiteVisit, JobApplication, NewsletterSubscriber
+except ImportError:
+    # These type placeholders help with type checking when models are unavailable.
+    UserAccount = None
+    Job = None
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -14,7 +26,7 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
 # Configure database
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+app.config["SQLALCHEMY_ENGINE_OPTIONS"]pip install flask werkzeug python-dotenv = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
