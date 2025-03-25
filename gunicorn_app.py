@@ -1,9 +1,9 @@
 """
-Ultra minimal Flask application for the Remote Work Job Board
+Gunicorn-optimized Flask application for Remote Work Job Board.
 """
-from flask import Flask, jsonify, render_template_string
+from flask import Flask, render_template_string, jsonify
 
-# Create the app outside any function for Gunicorn
+# Create the app outside any function to make it importable by Gunicorn
 app = Flask(__name__)
 
 @app.route('/health')
@@ -46,14 +46,10 @@ def index():
                 <p>✅ Server is running</p>
             </div>
             <div class="message">
-                <p>Welcome to the Remote Work Job Board</p>
-                <p>The application is loading...</p>
+                <p>The application is starting up...</p>
+                <p>Welcome to the Remote Work Job Board platform.</p>
             </div>
         </body>
     </html>
     """
     return render_template_string(html)
-
-# For direct execution (not needed by Gunicorn)
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True)

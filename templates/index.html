@@ -1,110 +1,176 @@
 {% extends 'base.html' %}
 
-{% block title %}Remote Work Job Board - Find Remote Jobs{% endblock %}
+{% block title %}Remote Work Job Board | Find Remote Jobs Worldwide{% endblock %}
 
 {% block content %}
-<div style="text-align: center; margin: 3rem 0;">
-    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Find Remote Work Opportunities</h1>
-    <p style="font-size: 1.2rem; max-width: 700px; margin: 0 auto 2rem auto;">
-        Discover remote job opportunities across blue-collar, white-collar, and grey-collar sectors from around the world.
-    </p>
-    
-    <div style="display: flex; justify-content: center; gap: 1rem; margin: 2rem 0;">
-        <a href="{{ url_for('jobs') }}" class="btn btn-accent" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Browse All Jobs</a>
-        <a href="{{ url_for('post_job') }}" class="btn" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Post a Job</a>
-    </div>
-</div>
-
-<div style="margin: 3rem 0;">
-    <h2 style="text-align: center; margin-bottom: 2rem;">Job Categories</h2>
-    
-    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;">
-        <div class="card" style="flex: 1; min-width: 250px; text-align: center; padding: 2rem;">
-            <h3>White-Collar</h3>
-            <p>Professional jobs typically performed in an office setting.</p>
-            <a href="{{ url_for('jobs', category='white-collar') }}" class="btn" style="margin-top: 1rem;">Browse Jobs</a>
-        </div>
-        
-        <div class="card" style="flex: 1; min-width: 250px; text-align: center; padding: 2rem;">
-            <h3>Blue-Collar</h3>
-            <p>Skilled trades and manual labor jobs that can be done remotely.</p>
-            <a href="{{ url_for('jobs', category='blue-collar') }}" class="btn" style="margin-top: 1rem;">Browse Jobs</a>
-        </div>
-        
-        <div class="card" style="flex: 1; min-width: 250px; text-align: center; padding: 2rem;">
-            <h3>Grey-Collar</h3>
-            <p>Jobs that blend technical knowledge with hands-on work.</p>
-            <a href="{{ url_for('jobs', category='grey-collar') }}" class="btn" style="margin-top: 1rem;">Browse Jobs</a>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <h1 class="display-4 mb-4">Remote Work Job Board</h1>
+            <p class="lead mb-5">Find the best remote job opportunities worldwide or list your remote positions easily.</p>
         </div>
     </div>
-</div>
 
-{% if featured_jobs %}
-<div style="margin: 3rem 0;">
-    <h2 style="text-align: center; margin-bottom: 1.5rem;">Featured Job Opportunities</h2>
-    
-    <div class="job-grid">
-        {% for job in featured_jobs %}
-            <div class="card job-card">
-                <div class="job-card-content">
-                    <h3>{{ job.title }}</h3>
-                    <div class="job-meta">
-                        <span>{{ job.company }}</span>
-                        <span>{{ job.location }}</span>
-                        {% if job.job_type %}
-                            <span>{{ job.job_type }}</span>
-                        {% endif %}
-                    </div>
-                    
-                    {% if job.category %}
-                        <div style="margin-bottom: 1rem;">
-                            <span class="badge">{{ job.category }}</span>
-                        </div>
-                    {% endif %}
-                    
-                    <p>{{ job.description[:150] }}{% if job.description|length > 150 %}...{% endif %}</p>
-                </div>
-                
-                <div style="margin-top: 1rem;">
-                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn" style="width: 100%;">View Details</a>
+    <div class="row mb-5">
+        <div class="col-md-6 animated-element">
+            <div class="card h-100">
+                <div class="card-body text-center p-5">
+                    <h2 class="mb-4">Find Remote Jobs</h2>
+                    <p class="mb-4">Browse through our curated list of remote job opportunities across various categories.</p>
+                    <a href="/jobs" class="btn btn-primary btn-lg">Browse Jobs</a>
                 </div>
             </div>
-        {% endfor %}
+        </div>
+        <div class="col-md-6 animated-element">
+            <div class="card h-100">
+                <div class="card-body text-center p-5">
+                    <h2 class="mb-4">Post a Remote Job</h2>
+                    <p class="mb-4">List your remote position and reach thousands of qualified candidates.</p>
+                    <a href="/post-job" class="btn btn-primary btn-lg">Post a Job</a>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <div style="text-align: center; margin-top: 2rem;">
-        <a href="{{ url_for('jobs') }}" class="btn">View All Jobs</a>
-    </div>
-</div>
-{% endif %}
 
-<div style="margin: 4rem 0; text-align: center;">
-    <h2>How It Works</h2>
-    
-    <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin-top: 2rem; text-align: left;">
-        <div style="flex: 1; min-width: 250px;">
-            <h3 style="display: flex; align-items: center;">
-                <span style="background-color: var(--primary-color); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 0.8rem;">1</span>
-                Search Jobs
-            </h3>
-            <p>Browse through our extensive database of remote job opportunities across various sectors and skills.</p>
+    <div class="row mb-5">
+        <div class="col-lg-12 text-center">
+            <h2 class="mb-4">Job Categories</h2>
+            <p class="mb-5">Explore remote jobs across various industries and specializations</p>
         </div>
-        
-        <div style="flex: 1; min-width: 250px;">
-            <h3 style="display: flex; align-items: center;">
-                <span style="background-color: var(--primary-color); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 0.8rem;">2</span>
-                Apply Directly
-            </h3>
-            <p>When you find a job that matches your skills, apply directly through the provided application link or contact information.</p>
+        <div class="col-md-4 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="category-icon mb-3">
+                        <i class="fas fa-laptop-code fa-3x text-primary"></i>
+                    </div>
+                    <h3>Technology</h3>
+                    <p>Software Development, Data Science, DevOps, IT Support, and more.</p>
+                    <a href="/jobs?category=technology" class="btn btn-outline-primary">View Jobs</a>
+                </div>
+            </div>
         </div>
-        
-        <div style="flex: 1; min-width: 250px;">
-            <h3 style="display: flex; align-items: center;">
-                <span style="background-color: var(--primary-color); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 0.8rem;">3</span>
-                Post Jobs
-            </h3>
-            <p>Employers can easily post remote job opportunities to reach qualified candidates from around the world.</p>
+        <div class="col-md-4 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="category-icon mb-3">
+                        <i class="fas fa-paint-brush fa-3x text-primary"></i>
+                    </div>
+                    <h3>Creative</h3>
+                    <p>Design, Content Writing, Video Production, Marketing, and more.</p>
+                    <a href="/jobs?category=creative" class="btn btn-outline-primary">View Jobs</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="category-icon mb-3">
+                        <i class="fas fa-chart-line fa-3x text-primary"></i>
+                    </div>
+                    <h3>Professional</h3>
+                    <p>Accounting, Legal, Human Resources, Sales, and more.</p>
+                    <a href="/jobs?category=professional" class="btn btn-outline-primary">View Jobs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5 mt-4">
+        <div class="col-md-4 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="category-icon mb-3">
+                        <i class="fas fa-heartbeat fa-3x text-primary"></i>
+                    </div>
+                    <h3>Healthcare</h3>
+                    <p>Telemedicine, Medical Writing, Health Coaching, and more.</p>
+                    <a href="/jobs?category=healthcare" class="btn btn-outline-primary">View Jobs</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="category-icon mb-3">
+                        <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+                    </div>
+                    <h3>Education</h3>
+                    <p>Online Teaching, Curriculum Development, Tutoring, and more.</p>
+                    <a href="/jobs?category=education" class="btn btn-outline-primary">View Jobs</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="category-icon mb-3">
+                        <i class="fas fa-tools fa-3x text-primary"></i>
+                    </div>
+                    <h3>Skilled Trades</h3>
+                    <p>Customer Support, Virtual Assistance, Technical Support, and more.</p>
+                    <a href="/jobs?category=skilled-trades" class="btn btn-outline-primary">View Jobs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body p-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3 class="mb-3">Looking for Remote Work?</h3>
+                            <p class="mb-md-0">Subscribe to our newsletter and get the latest remote job opportunities delivered to your inbox.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <form>
+                                <div class="input-group">
+                                    <input type="email" class="form-control" placeholder="Your Email">
+                                    <button class="btn btn-primary" type="submit">Subscribe</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-lg-12 text-center">
+            <h2 class="mb-4">Our Tools</h2>
+            <p class="mb-5">Explore our specialized tools for remote job seekers and employers</p>
+        </div>
+        <div class="col-md-6 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3>Job Extractor</h3>
+                    <p>Paste a job posting URL and our tool will automatically extract and format the job details for you.</p>
+                    <p>Perfect for employers who want to quickly add listings from other sites.</p>
+                    <a href="/job-extractor" class="btn btn-primary">Try Job Extractor</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4 animated-element">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3>Text Extractor</h3>
+                    <p>Extract clean, readable text content from any website. Removes ads, navigation, and other clutter.</p>
+                    <p>Great for researchers and content creators looking for clean text.</p>
+                    <a href="/text-extractor" class="btn btn-primary">Try Text Extractor</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<!-- FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add any extra JavaScript here -->
 {% endblock %}

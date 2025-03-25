@@ -1,16 +1,20 @@
+"""
+Simplest possible Flask application for the Remote Work Job Board
+This file contains absolutely minimal code to ensure fast startup
+"""
 from flask import Flask, jsonify
 
-# Create the Flask app
+# Create the application with minimal configuration
 app = Flask(__name__)
-
-# Health check endpoint
-@app.route('/')
-def index():
-    return jsonify({"status": "ok", "message": "Remote Work Job Board API is running"})
 
 @app.route('/health')
 def health():
+    """Health check endpoint"""
     return jsonify({"status": "ok"})
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+@app.route('/')
+def index():
+    """Simple homepage"""
+    return "<html><body><h1>Remote Work Job Board</h1><p>Starting up...</p></body></html>"
+
+# No conditional execution block to reduce parsing time

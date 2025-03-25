@@ -1,14 +1,13 @@
 """
-Super minimal Flask application that should start up very quickly.
+Ultra minimalist Flask application for Remote Work Job Board
 """
-import flask
+from flask import Flask
 
-# Create the application without any dependencies
-app = flask.Flask(__name__)
+app = Flask(__name__)
 
 @app.route('/')
 def index():
-    """Simple homepage"""
+    """Homepage"""
     return """
     <!DOCTYPE html>
     <html>
@@ -26,10 +25,9 @@ def index():
             <div class="container">
                 <h1>Remote Work Job Board</h1>
                 <div class="status">
-                    <p>✅ Server is running</p>
+                    <p>✅ Minimal Server is running</p>
                 </div>
-                <p>Welcome to the Remote Work Job Board. The application is starting up and will be ready in a moment.</p>
-                <p>This is a super minimal version that should start very quickly.</p>
+                <p>Welcome to the Remote Work Job Board. This is a minimal server.</p>
             </div>
         </body>
     </html>
@@ -38,8 +36,8 @@ def index():
 @app.route('/health')
 def health():
     """Health check endpoint"""
-    return '{"status":"ok"}', 200, {'Content-Type': 'application/json'}
+    return '{"status":"ok"}'
 
-# For direct execution
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    # Only bind to 0.0.0.0 if running in production
+    app.run(host='0.0.0.0', port=5000)

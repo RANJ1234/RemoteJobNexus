@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Extractor | Remote Work{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="text-center mb-5">
+                <h1 class="display-4">Job Posting Extractor</h1>
+                <p class="lead">Extract job details from any job posting URL</p>
+            </div>
+
+            <div class="card mb-5">
+                <div class="card-body">
+                    <div id="job-extraction-form">
+                        <div class="form-group mb-3">
+                            <label for="job-url" class="form-label">Enter a job posting URL</label>
+                            <div class="input-group">
+                                <input type="url" class="form-control" id="job-url" 
+                                       placeholder="https://example.com/jobs/remote-developer" required>
+                                <button type="button" class="btn btn-primary" id="extract-btn">Extract Job</button>
+                            </div>
+                            <small class="form-text text-muted">We'll extract the job details from this URL, transforming it into a structured job post.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="extraction-status" class="alert alert-info d-none">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span>Extracting job details... This may take a few seconds.</span>
+                </div>
+            </div>
+
+            <div id="extraction-error" class="alert alert-danger d-none">
+                <div id="error-message"></div>
+            </div>
+
+            <div id="job-result" class="d-none">
+                <div class="card mb-4">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Extracted Job Details</h4>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-2" id="copy-btn" 
+                                    onclick="copyJobToClipboard()">Copy Details</button>
+                            <button class="btn btn-sm btn-primary" id="save-btn">Save Job</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="job-form">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="job-title" class="form-label">Job Title</label>
+                                        <input type="text" class="form-control" id="job-title" name="title">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="job-company" class="form-label">Company</label>
+                                        <input type="text" class="form-control" id="job-company" name="company">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="job-location" class="form-label">Location</label>
+                                        <input type="text" class="form-control" id="job-location" name="location">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="job-type" class="form-label">Job Type</label>
+                                        <select class="form-select" id="job-type" name="job_type">
+                                            <option value="">Select job type</option>
+                                            <option value="Full-Time">Full-Time</option>
+                                            <option value="Part-Time">Part-Time</option>
+                                            <option value="Contract">Contract</option>
+                                            <option value="Freelance">Freelance</option>
+                                            <option value="Temporary">Temporary</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="job-salary" class="form-label">Salary</label>
+                                        <input type="text" class="form-control" id="job-salary" name="salary">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="job-category" class="form-label">Category</label>
+                                        <select class="form-select" id="job-category" name="category">
+                                            <option value="">Select category</option>
+                                            <option value="technology">Technology</option>
+                                            <option value="creative">Creative</option>
+                                            <option value="professional">Professional</option>
+                                            <option value="healthcare">Healthcare</option>
+                                            <option value="education">Education</option>
+                                            <option value="skilled-trades">Skilled Trades</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="job-subcategory" class="form-label">Subcategory</label>
+                                        <input type="text" class="form-control" id="job-subcategory" name="subcategory">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="job-description" class="form-label">Description</label>
+                                <textarea class="form-control" id="job-description" name="description" rows="6"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="job-requirements" class="form-label">Requirements</label>
+                                <textarea class="form-control" id="job-requirements" name="requirements" rows="4"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="job-contact-email" class="form-label">Contact Email</label>
+                                <input type="email" class="form-control" id="job-contact-email" name="contact_email">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="job-application-url" class="form-label">Application URL</label>
+                                <input type="url" class="form-control" id="job-application-url" name="application_url">
+                            </div>
+                            
+                            <input type="hidden" id="job-source-url" name="source_url">
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5">
+                <h3>How it works</h3>
+                <p>Our Job Extractor uses advanced algorithms to:</p>
+                <ul>
+                    <li>Identify job postings from various websites</li>
+                    <li>Extract structured job details like title, company, and requirements</li>
+                    <li>Categorize jobs based on content analysis</li>
+                    <li>Organize the data into a consistent format</li>
+                </ul>
+                <p>This tool is particularly useful for:</p>
+                <ul>
+                    <li>Quickly adding jobs to the Remote Work Job Board</li>
+                    <li>Converting various job formats into a standardized structure</li>
+                    <li>Analyzing job descriptions across multiple sources</li>
+                    <li>Time-saving for employers and administrators</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const extractBtn = document.getElementById('extract-btn');
+    const jobUrlInput = document.getElementById('job-url');
+    const extractionStatus = document.getElementById('extraction-status');
+    const extractionError = document.getElementById('extraction-error');
+    const errorMessage = document.getElementById('error-message');
+    const jobResult = document.getElementById('job-result');
+    const saveBtn = document.getElementById('save-btn');
+    
+    extractBtn.addEventListener('click', function() {
+        const url = jobUrlInput.value.trim();
+        
+        if (!url) {
+            showError('Please enter a job posting URL');
+            return;
+        }
+        
+        // Show loading indicator
+        extractionStatus.classList.remove('d-none');
+        extractionError.classList.add('d-none');
+        jobResult.classList.add('d-none');
+        
+        // Make API request to extract job details
+        fetch('/api/extract-job', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url: url })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading indicator
+            extractionStatus.classList.add('d-none');
+            
+            if (data.success) {
+                // Populate form with extracted job details
+                populateJobForm(data.job, url);
+                jobResult.classList.remove('d-none');
+            } else {
+                showError(data.error || 'Failed to extract job details from this URL');
+            }
+        })
+        .catch(error => {
+            extractionStatus.classList.add('d-none');
+            showError('Error connecting to the server. Please try again.');
+            console.error('Error:', error);
+        });
+    });
+    
+    saveBtn.addEventListener('click', function() {
+        // Here you would normally save the job to the database
+        // For now, just show a success message
+        alert('Job saved successfully!');
+    });
+    
+    function showError(message) {
+        errorMessage.textContent = message;
+        extractionError.classList.remove('d-none');
+    }
+    
+    function populateJobForm(job, sourceUrl) {
+        document.getElementById('job-title').value = job.title || '';
+        document.getElementById('job-company').value = job.company || '';
+        document.getElementById('job-location').value = job.location || 'Remote';
+        document.getElementById('job-type').value = job.job_type || '';
+        document.getElementById('job-salary').value = job.salary || '';
+        document.getElementById('job-category').value = job.category || '';
+        document.getElementById('job-subcategory').value = job.subcategory || '';
+        document.getElementById('job-description').value = job.description || '';
+        document.getElementById('job-requirements').value = job.requirements || '';
+        document.getElementById('job-contact-email').value = job.contact_email || '';
+        document.getElementById('job-application-url').value = job.application_url || sourceUrl;
+        document.getElementById('job-source-url').value = sourceUrl;
+    }
+});
+
+function copyJobToClipboard() {
+    // Gather all form fields
+    const formFields = document.getElementById('job-form').elements;
+    let textContent = '';
+    
+    // Create a formatted string of all form values
+    for (let i = 0; i < formFields.length; i++) {
+        const field = formFields[i];
+        if (field.name && field.value) {
+            // Convert field name from camelCase to Title Case for display
+            const fieldName = field.name
+                .replace(/([A-Z])/g, ' $1') // Insert a space before all caps
+                .replace(/^./, str => str.toUpperCase()) // Uppercase the first character
+                .replace(/_/g, ' '); // Replace underscores with spaces
+            
+            textContent += `${fieldName}: ${field.value}\n\n`;
+        }
+    }
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(textContent).then(() => {
+        // Change button text temporarily
+        const copyBtn = document.getElementById('copy-btn');
+        const originalText = copyBtn.innerText;
+        copyBtn.innerText = 'Copied!';
+        setTimeout(() => {
+            copyBtn.innerText = originalText;
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}
