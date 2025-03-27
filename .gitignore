@@ -1,0 +1,8 @@
+.qodo
+deploy.zip
+*.pyc
+__pycache__/
+.env
+.idea/
+.vscode/
+venv/
