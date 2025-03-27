@@ -1,8 +1,4 @@
 #!/usr/bin/python
-import cgi
-import cgitb
-cgitb.enable()
-
 print("Content-Type: text/html\n\n")
 print("""
 <!DOCTYPE html>
@@ -10,17 +6,18 @@ print("""
 <head>
     <title>Remote Job Nexus</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { color: #0066cc; }
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        h1 { color: #2c3e50; }
         .container { max-width: 800px; margin: 0 auto; }
+        .success { color: #27ae60; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Remote Job Nexus</h1>
-        <p>Python CGI is working correctly!</p>
-        <p>This is a fallback page to ensure that Python execution is working on your server.</p>
-        <p>To see the full WSGI application, please check the passenger_wsgi.py configuration.</p>
+        <p class="success">✓ Python CGI application successfully deployed!</p>
+        <p>This is a simple Python script running as a CGI application.</p>
+        <p>The web server is now correctly configured to run Python scripts.</p>
     </div>
 </body>
 </html>
